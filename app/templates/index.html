@@ -1,0 +1,445 @@
+{% extends 'base.html' %}
+{% block title %}Сценарии{% endblock %}
+
+{% block content %}
+<style>
+  .panel {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(30, 58, 95, 0.12);
+    border-radius: 20px;
+    padding: 28px;
+    box-shadow: 0 8px 32px rgba(30, 58, 95, 0.08);
+  }
+
+  .panel-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+  }
+
+  .panel-head h1 {
+    font-size: 26px;
+    font-weight: 500;
+    margin: 0;
+    color: #1e3a5f;
+    letter-spacing: -0.02em;
+  }
+
+  .scenarios-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 24px;
+  }
+
+  .scenario-card {
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(30, 58, 95, 0.1);
+    border-radius: 18px;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.25s ease;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(30, 58, 95, 0.04);
+  }
+
+  .scenario-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(30, 58, 95, 0.1);
+    border-color: rgba(30, 58, 95, 0.2);
+    background: rgba(255, 255, 255, 0.75);
+  }
+
+  /* Цветовые акценты — только левая полоска */
+  .scenario-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    border-radius: 18px 0 0 18px;
+  }
+
+  .color-1::before { background: #3b82f6; }
+  .color-2::before { background: #10b981; }
+  .color-3::before { background: #f59e0b; }
+  .color-4::before { background: #ef4444; }
+  .color-5::before { background: #8b5cf6; }
+  .color-6::before { background: #06b6d4; }
+
+  .scenario-card {
+    position: relative;
+  }
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 20px 20px 0 24px;
+  }
+
+  .card-title {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .scenario-id {
+    font-size: 12px;
+    color: #1e3a5f;
+    background: rgba(30, 58, 95, 0.08);
+    padding: 4px 12px;
+    border-radius: 24px;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+
+  .scenario-name {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0;
+    color: #1e3a5f;
+    line-height: 1.3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+    letter-spacing: -0.01em;
+  }
+
+  .card-status {
+    flex-shrink: 0;
+  }
+
+  .status {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 12px;
+    border-radius: 24px;
+    font-size: 12px;
+    font-weight: 500;
+    background: rgba(30, 58, 95, 0.06);
+    color: #1e3a5f;
+    white-space: nowrap;
+  }
+
+  .status.done {
+    background: rgba(16, 185, 129, 0.12);
+    color: #065f46;
+  }
+
+  .status.draft {
+    background: rgba(30, 58, 95, 0.06);
+    color: #1e3a5f;
+  }
+
+  .scenario-description {
+    padding: 14px 20px 14px 24px;
+    font-size: 13px;
+    color: rgba(30, 58, 95, 0.75);
+    line-height: 1.5;
+    min-height: 60px;
+    max-height: 100px;
+    overflow-y: auto;
+  }
+
+  .no-description {
+    color: rgba(30, 58, 95, 0.4);
+    font-style: italic;
+  }
+
+  .scenario-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    padding: 16px 20px 16px 24px;
+    margin-top: auto;
+    border-top: 1px solid rgba(30, 58, 95, 0.08);
+    border-bottom: 1px solid rgba(30, 58, 95, 0.08);
+  }
+
+  .meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .meta-label {
+    color: rgba(30, 58, 95, 0.5);
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+
+  .meta-value {
+    color: #1e3a5f;
+    font-weight: 500;
+    font-size: 13px;
+  }
+
+  .card-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    padding: 14px 20px 14px 24px;
+  }
+
+  .icon-link {
+    text-decoration: none;
+    font-size: 18px;
+    padding: 8px 14px;
+    border-radius: 10px;
+    color: #1e3a5f;
+    transition: all 0.2s;
+    background: rgba(30, 58, 95, 0.04);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: none;
+    cursor: pointer;
+  }
+
+  .icon-link:hover {
+    background: rgba(30, 58, 95, 0.12);
+    transform: scale(1.02);
+  }
+
+  .icon-link span {
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .btn-primary {
+    background: #1e3a5f;
+    color: #fff;
+    padding: 12px 24px;
+    border-radius: 999px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 500;
+    font-size: 14px;
+    transition: all 0.2s;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(30, 58, 95, 0.15);
+  }
+
+  .btn-primary:hover {
+    background: #152b45;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(30, 58, 95, 0.2);
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 80px 20px;
+    color: rgba(30, 58, 95, 0.5);
+  }
+
+  .empty-state p {
+    margin-bottom: 24px;
+    font-size: 16px;
+  }
+
+  .toast-message {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #1d2433;
+    color: white;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    z-index: 1000;
+    animation: fadeIn 0.3s ease;
+  }
+
+  .toast-message.error {
+    background: #d11d1d;
+  }
+
+  .toast-message.success {
+    background: #10b981;
+  }
+
+  @keyframes fadeIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+
+  @media (max-width: 768px) {
+    .panel {
+      padding: 20px;
+    }
+
+    .scenarios-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .panel-head h1 {
+      font-size: 22px;
+    }
+  }
+</style>
+
+<div class="panel">
+  <div class="panel-head">
+    <h1>Сценарии оценки</h1>
+    {% if current_user.role == 'admin' %}
+      <button class="btn-primary" id="createScenarioBtn">+ Новый сценарий</button>
+    {% endif %}
+  </div>
+
+  {% if scenarios %}
+    <div class="scenarios-grid">
+      {% for s in scenarios %}
+      <div class="scenario-card color-{{ loop.index % 6 + 1 }}" data-scenario-id="{{ s.id }}">
+        <div class="card-header">
+          <div class="card-title">
+            <span class="scenario-id">#{{ s.id }}</span>
+            <h3 class="scenario-name">{{ s.name }}</h3>
+          </div>
+          <div class="card-status">
+            <span class="status {% if s.status == 'расчёт выполнен' %}done{% elif s.status == 'черновик' %}draft{% endif %}">
+              {% if s.status == 'расчёт выполнен' %}
+                ✓ Выполнен
+              {% elif s.status == 'черновик' %}
+                ○ Черновик
+              {% else %}
+                {{ s.status }}
+              {% endif %}
+            </span>
+          </div>
+        </div>
+
+        <div class="scenario-description">
+          {% if s.description %}
+            {{ s.description }}
+          {% else %}
+            <span class="no-description">Описание не указано</span>
+          {% endif %}
+        </div>
+
+        <div class="scenario-meta">
+          <div class="meta-item">
+            <span class="meta-label">Метод расчёта</span>
+            <span class="meta-value">{{ s.method }}</span>
+          </div>
+        </div>
+
+        <div class="card-actions">
+          {% if current_user.role == 'admin' %}
+            <a href="{{ url_for('web.scenario_page', sid=s.id) }}" class="icon-link" title="Настроить критерии">
+              <span>⚙️</span>
+            </a>
+            <button class="icon-link run-scenario-btn" data-scenario-id="{{ s.id }}" title="Рассчитать рейтинг">
+              <span>▶️</span>
+            </button>
+          {% endif %}
+          <a href="{{ url_for('web.results_page', sid=s.id) }}" class="icon-link" title="Смотреть результаты">
+            <span>📊</span>
+          </a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty-state">
+      <p>😊 Нет созданных сценариев</p>
+      {% if current_user.role == 'admin' %}
+        <button class="btn-primary" id="createFirstScenarioBtn">Создать первый сценарий</button>
+      {% endif %}
+    </div>
+  {% endif %}
+</div>
+
+<script>
+function showMessage(message, isError = false) {
+  const existing = document.querySelector('.toast-message');
+  if (existing) existing.remove();
+  const div = document.createElement('div');
+  div.className = `toast-message ${isError ? 'error' : 'success'}`;
+  div.textContent = message;
+  document.body.appendChild(div);
+  setTimeout(() => div.remove(), 3000);
+}
+
+async function createScenario() {
+  try {
+    const res = await fetch('/api/scenarios', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: '',
+        description: '',
+        method: 'topsis',
+        weight_mode: 'swara',
+        criterion_ids: []
+      })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      window.location.href = `/scenarios/${data.id}`;
+    } else {
+      showMessage(data.error || 'Ошибка создания', true);
+    }
+  } catch (err) {
+    showMessage('Ошибка сети', true);
+  }
+}
+
+document.getElementById('createScenarioBtn')?.addEventListener('click', createScenario);
+document.getElementById('createFirstScenarioBtn')?.addEventListener('click', createScenario);
+
+document.querySelectorAll('.run-scenario-btn').forEach(btn => {
+  btn.addEventListener('click', async function() {
+    const scenarioId = this.dataset.scenarioId;
+    const originalContent = this.innerHTML;
+
+    this.innerHTML = '<span>⏳</span>';
+    this.disabled = true;
+
+    try {
+      showMessage('Расчёт запущен...');
+      const res = await fetch(`/api/scenarios/${scenarioId}/run`, { method: 'POST' });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Ошибка расчёта');
+      }
+
+      showMessage('Расчёт завершён!');
+
+      const card = this.closest('.scenario-card');
+      const statusEl = card.querySelector('.status');
+      if (statusEl) {
+        statusEl.textContent = '✓ Выполнен';
+        statusEl.classList.remove('draft');
+        statusEl.classList.add('done');
+      }
+
+      setTimeout(() => {
+        window.location.href = `/results/${scenarioId}`;
+      }, 800);
+
+    } catch (err) {
+      showMessage(err.message, true);
+      this.innerHTML = originalContent;
+      this.disabled = false;
+    }
+  });
+});
+</script>
+{% endblock %}

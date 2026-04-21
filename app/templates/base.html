@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Carrier Rating{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">Carrier Rating Platform</div>
+  {% if current_user %}
+  <nav class="topnav">
+    <a href="{{ url_for('web.index') }}">Сценарии</a>
+    {% if current_user.role == 'admin' %}
+    <a href="{{ url_for('web.dataset_page') }}">Загрузка данных</a>
+    <a href="{{ url_for('web.carriers_page') }}">Перевозчики</a>
+    {% endif %}
+    <a href="{{ url_for('auth.logout') }}">Выход</a>
+      <span class="role-pill">{{ current_user.role }}</span>
+  </nav>
+  {% endif %}
+</header>
+<main class="page">
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      {% for m in messages %}<div class="flash">{{ m }}</div>{% endfor %}
+    {% endif %}
+  {% endwith %}
+  {% block content %}{% endblock %}
+</main>
+</body>
+</html>

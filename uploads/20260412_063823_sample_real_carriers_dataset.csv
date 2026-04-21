@@ -1,0 +1,16 @@
+company_name,country,service_type,C1,C2,C3,C4,C5,C6,C7,C8,C9,C10,C11,C12,C13,C14,C15,C16
+DHL Supply Chain,Germany,3PL,94,92,95,2.1,90,88,98,85,90,93,91,74,76,96,89,87
+Kuehne+Nagel,Switzerland,3PL,93,91,94,2.4,88,87,97,84,89,94,92,73,75,95,90,88
+DSV,Denmark,3PL,91,90,92,2.9,86,85,95,80,88,92,90,72,74,93,88,86
+DB Schenker,Germany,3PL,90,88,91,3.0,85,84,94,82,86,90,89,70,72,92,87,84
+CEVA Logistics,France,3PL,89,86,90,3.2,84,83,93,81,85,88,87,69,71,90,86,82
+GEODIS,France,3PL,88,85,89,3.4,83,82,92,79,84,87,86,68,70,89,85,81
+Expeditors,USA,Freight Forwarding,92,89,93,2.6,87,86,91,78,88,91,90,71,73,94,91,85
+C.H. Robinson,USA,Brokerage,87,84,88,3.8,82,80,90,76,84,89,88,67,69,88,84,80
+FedEx Logistics,USA,Integrated Logistics,90,93,91,3.1,86,84,89,77,85,90,87,75,77,92,88,83
+UPS Supply Chain Solutions,USA,Integrated Logistics,91,92,92,2.8,87,85,90,79,86,91,88,76,78,93,89,84
+Nippon Express,Japan,3PL,89,87,90,3.0,85,88,93,80,84,86,85,70,72,90,87,86
+Maersk Logistics,Denmark,Integrated Logistics,88,86,89,3.3,84,83,96,78,83,88,86,71,74,91,86,82
+Hellmann Worldwide Logistics,Germany,3PL,87,84,88,3.5,82,81,91,77,82,85,84,68,70,88,83,80
+XPO Logistics,USA,Logistics,86,83,87,3.9,80,79,89,75,81,84,83,66,68,87,82,79
+GXO Logistics,UK,Contract Logistics,88,85,89,3.1,85,82,88,76,83,87,85,69,71,89,84,81

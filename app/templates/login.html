@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8"><title>Вход</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+</head>
+<body class="login-body">
+<div class="login-card">
+  <h1>Вход</h1>
+  <form method="post" action="{{ url_for('auth.login_post') }}">
+    <label>Имя пользователя</label>
+    <input name="username" type="text" placeholder="admin или user">
+    <label>Пароль</label>
+    <input name="password" type="password" placeholder="Введите пароль">
+    <button class="btn btn-primary" type="submit">Войти</button>
+  </form>
+  <div class="hint">Администратор: admin / admin123<br>Пользователь: user / user123</div>
+</div>
+</body>
+</html>

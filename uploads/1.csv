@@ -1,0 +1,21 @@
+company_name,country,service_type,C1,C2,C3,C4,C5,C6,C7,C8,C9,C10,C11,C12,C13,C14,C15,C16
+Kuehne+Nagel,Switzerland,3PL,89,87,85,2.9,84,81,95,79,85,88,86,70,72,90,84,81
+DHL Supply Chain,Germany,3PL,87,86,84,3.0,83,80,94,78,84,87,85,69,71,89,83,80
+DSV,Denmark,3PL,88,85,86,2.8,82,79,93,77,86,89,87,71,73,91,85,82
+Expeditors,USA,Freight Forwarding,90,88,83,3.1,85,82,92,76,87,90,88,72,74,92,86,83
+Nippon Express,Japan,3PL,86,84,88,3.3,83,85,94,80,84,86,84,69,72,88,82,84
+DB Schenker,Germany,3PL,85,83,82,3.4,81,78,91,75,83,85,83,68,70,87,81,79
+UPS Supply Chain Solutions,USA,Integrated Logistics,84,86,83,3.5,82,79,90,76,85,88,86,70,73,89,84,80
+FedEx Logistics,USA,Integrated Logistics,83,85,82,3.6,80,77,89,74,84,87,85,69,71,88,83,79
+Maersk Logistics,Denmark,Integrated Logistics,82,81,84,3.7,79,78,92,73,82,84,82,67,70,86,80,78
+Panalpina,Switzerland,Freight Forwarding,84,82,81,3.5,80,76,90,72,83,85,83,68,69,87,82,80
+CEVA Logistics,France,3PL,80,79,80,3.9,77,74,88,70,79,81,80,64,66,84,78,76
+GEODIS,France,3PL,79,78,79,4.1,76,73,87,69,78,80,79,63,65,83,77,75
+Yamato Transport,Japan,Parcel Delivery,81,80,87,3.8,78,83,89,75,80,82,81,66,70,85,79,82
+Rhenus Logistics,Germany,3PL,78,77,78,4.0,75,72,86,68,77,79,78,62,64,82,76,74
+GXO Logistics,UK,Contract Logistics,77,76,77,4.2,74,71,85,67,76,78,77,61,63,81,75,73
+XPO Logistics,USA,Logistics,76,74,75,4.4,72,69,84,66,74,76,75,59,61,79,73,71
+Hellmann Worldwide Logistics,Germany,3PL,75,73,74,4.3,71,68,83,65,73,75,74,58,60,78,72,70
+C.H. Robinson,USA,Brokerage,74,72,73,4.6,70,67,82,64,72,74,73,57,59,77,71,69
+Kintetsu World Express,Japan,Freight Forwarding,73,71,76,4.1,69,70,84,66,71,73,72,60,62,79,74,73
+Agility Logistics,Kuwait,3PL,72,70,72,4.5,68,65,81,63,70,72,71,56,58,76,70,68

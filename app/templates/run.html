@@ -1,0 +1,410 @@
+{% extends 'base.html' %}
+{% block title %}Запуск #{{ run.id }}{% endblock %}
+
+{% block content %}
+<div class="panel">
+  <div class="panel-head">
+    <a href="{{ url_for('web.results_page', sid=run.scenario_id) }}" class="back-arrow">←</a>
+    <h1>Запуск #{{ run.id }}</h1>
+    <div style="width: 30px;"></div>
+  </div>
+
+  <!-- Мета-информация -->
+  <div class="meta-grid">
+    <div class="meta-box">
+      <span>Статус</span>
+      <strong>{% if run.status == 'done' %}Завершён{% else %}{{ run.status }}{% endif %}</strong>
+    </div>
+    <div class="meta-box">
+      <span>Сценарий</span>
+      <strong><a href="{{ url_for('web.scenario_page', sid=run.scenario_id) }}">Сценарий #{{ run.scenario_id }}</a></strong>
+    </div>
+    <div class="meta-box">
+      <span>Начало</span>
+      <strong>{{ run.started_at.strftime('%d.%m.%Y %H:%M') if run.started_at else '—' }}</strong>
+    </div>
+    <div class="meta-box">
+      <span>Завершение</span>
+      <strong>{{ run.finished_at.strftime('%d.%m.%Y %H:%M') if run.finished_at else '—' }}</strong>
+    </div>
+  </div>
+
+  <!-- Веса критериев -->
+  <section style="margin-bottom: 32px;">
+    <h2 style="font-size: 16px; font-weight: 500; margin-bottom: 16px;">Веса критериев</h2>
+    <div id="weightsChart" class="bars"></div>
+  </section>
+
+  <!-- Тепловая карта -->
+  <section style="margin-bottom: 32px;">
+    <h2 style="font-size: 16px; font-weight: 500; margin-bottom: 16px;">Тепловая карта критериев</h2>
+    <div class="heatmap-container">
+      <div class="heatmap-scroll">
+        <table class="heatmap-table" id="heatmapTable">
+          <thead>
+            <tr id="heatmapHeader">
+              <th>Критерий</th>
+             </tr>
+          </thead>
+          <tbody id="heatmapBody">
+            <tr><td colspan="10" style="text-align: center; padding: 40px;">Загрузка...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Легенда -->
+    <div class="heatmap-legend">
+      <span class="legend-item"><span class="legend-color legend-excellent"></span> Отлично (0.8–1.0)</span>
+      <span class="legend-item"><span class="legend-color legend-good"></span> Хорошо (0.6–0.8)</span>
+      <span class="legend-item"><span class="legend-color legend-medium"></span> Средне (0.4–0.6)</span>
+      <span class="legend-item"><span class="legend-color legend-bad"></span> Плохо (0.0–0.4)</span>
+    </div>
+  </section>
+</div>
+
+<style>
+.panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.back-arrow {
+  font-size: 28px;
+  text-decoration: none;
+  color: #1d2433;
+  line-height: 1;
+  padding: 0 8px;
+  border-radius: 8px;
+}
+
+.back-arrow:hover {
+  background: #f0f4fa;
+}
+
+.panel-head h1 {
+  font-size: 20px;
+  font-weight: 500;
+  margin: 0;
+}
+
+.meta-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.meta-box {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 12px;
+  background: #f8fbff;
+}
+
+.meta-box span {
+  display: block;
+  color: #667085;
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+
+.meta-box strong {
+  font-size: 14px;
+}
+
+.meta-box a {
+  color: #2c67f2;
+  text-decoration: none;
+}
+
+.heatmap-container {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+  background: white;
+}
+
+.heatmap-scroll {
+  overflow-x: auto;
+}
+
+.heatmap-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  min-width: 500px;
+}
+
+.heatmap-table th {
+  background: #f8fafd;
+  padding: 12px 16px;
+  text-align: center;
+  font-weight: 600;
+  color: #475569;
+  border-bottom: 1px solid #e2e8f0;
+  white-space: nowrap;
+}
+
+.heatmap-table td {
+  padding: 10px 16px;
+  text-align: center;
+  border-bottom: 1px solid #f1f5f9;
+  white-space: nowrap;
+}
+
+.heatmap-table tbody tr:hover {
+  background: #fafbfc;
+}
+
+.heatmap-table td:first-child {
+  text-align: left;
+  font-weight: 500;
+  color: #1d2433;
+}
+
+.cell-excellent {
+  background: #d1fae5;
+  color: #065f46;
+  font-weight: 600;
+}
+
+.cell-good {
+  background: #dbeafe;
+  color: #1e40af;
+  font-weight: 600;
+}
+
+.cell-medium {
+  background: #fef3c7;
+  color: #92400e;
+  font-weight: 600;
+}
+
+.cell-bad {
+  background: #fee2e2;
+  color: #991b1b;
+  font-weight: 600;
+}
+
+.heatmap-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  padding: 16px;
+  background: #f8fafd;
+  border-top: 1px solid #e2e8f0;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #475569;
+}
+
+.legend-color {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+}
+
+.legend-excellent {
+  background: #d1fae5;
+}
+
+.legend-good {
+  background: #dbeafe;
+}
+
+.legend-medium {
+  background: #fef3c7;
+}
+
+.legend-bad {
+  background: #fee2e2;
+}
+
+.bars {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.bar-row {
+  display: grid;
+  grid-template-columns: 220px 1fr 70px;
+  gap: 12px;
+  align-items: center;
+}
+
+.bar-label {
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #1d2433;
+}
+
+.bar-track {
+  height: 28px;
+  background: #e2e8f0;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #0f2747, #1a3a62);
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 8px;
+  box-sizing: border-box;
+  min-width: 30px;
+}
+
+.bar-fill span {
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+.bar-value {
+  font-size: 13px;
+  font-weight: 600;
+  text-align: right;
+  color: #1d2433;
+}
+
+@media (max-width: 768px) {
+  .meta-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .bar-row {
+    grid-template-columns: 140px 1fr 60px;
+  }
+}
+</style>
+
+<script>
+// Актуальные 12 критериев
+const CRITERIA_LABELS = {
+    'otif': 'Своевременная и полная доставка (OTIF)',
+    'cancellation_rate': 'Отмены рейсов',
+    'no_show_rate': 'Неявка на загрузку',
+    'damage_rate': 'Повреждения груза',
+    'claim_rate': 'Частота претензий',
+    'tracking_compliance': 'GPS-трекинг',
+    'pod_rate': 'Подтверждение доставки (POD)',
+    'payment_compliance': 'Своевременность платежей',
+    'acceptance_rate': 'Принятие заказов',
+    'rejection_rate': 'Отказы от заявок',
+    'repeat_order_rate': 'Повторные рейсы',
+    'feedback_score': 'Отзывы клиентов'
+};
+
+function getCellClass(value) {
+  if (value >= 0.8) return 'cell-excellent';
+  if (value >= 0.6) return 'cell-good';
+  if (value >= 0.4) return 'cell-medium';
+  return 'cell-bad';
+}
+
+function renderWeights(meta) {
+  const weights = meta.weights || [];
+  const codes = meta.criteria_codes || [];
+
+  if (weights.length === 0 || codes.length === 0) {
+    document.getElementById('weightsChart').innerHTML = '<div style="padding: 20px; text-align: center; color: #667085;">Нет данных</div>';
+    return;
+  }
+
+  const container = document.getElementById('weightsChart');
+
+  container.innerHTML = codes.map((code, i) => {
+    const name = CRITERIA_LABELS[code] || code;
+    const weight = weights[i] || 0;
+    const percent = weight * 100;
+    const weightPercent = percent.toFixed(1);
+
+    return `
+      <div class="bar-row">
+        <div class="bar-label" title="${name}">${name}</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width: ${percent}%;">
+            <span>${weightPercent}%</span>
+          </div>
+        </div>
+        <div class="bar-value">${weightPercent}%</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderHeatmap(data) {
+  const results = data.results || [];
+  const meta = data.meta || {};
+  const criteriaCodes = meta.criteria_codes || [];
+
+  if (results.length === 0 || criteriaCodes.length === 0) {
+    document.getElementById('heatmapBody').innerHTML = '<tr><td colspan="10" style="text-align: center; padding: 40px;">Нет данных</td></tr>';
+    return;
+  }
+
+  const headerRow = document.getElementById('heatmapHeader');
+  headerRow.innerHTML = '<th>Критерий</th>';
+  results.forEach(c => {
+    const th = document.createElement('th');
+    th.textContent = c.company_name.length > 15 ? c.company_name.slice(0, 13) + '…' : c.company_name;
+    th.title = c.company_name;
+    headerRow.appendChild(th);
+  });
+
+  let html = '';
+
+  criteriaCodes.forEach((code, idx) => {
+    const name = CRITERIA_LABELS[code] || code;
+
+    html += '<tr>';
+    html += `<td title="${name}">${name}</td>`;
+
+    results.forEach(carrier => {
+      const details = carrier.details || {};
+      const values = details.criteria_values_norm || [];
+      const value = values[idx] !== undefined ? values[idx] : 0;
+
+      const cellClass = getCellClass(value);
+      html += `<td class="${cellClass}">${value.toFixed(3)}</td>`;
+    });
+
+    html += '</tr>';
+  });
+
+  document.getElementById('heatmapBody').innerHTML = html;
+}
+
+(async () => {
+  try {
+    const res = await fetch(`/api/runs/{{ run.id }}`);
+    if (!res.ok) throw new Error('Ошибка загрузки');
+    const data = await res.json();
+
+    console.log('Данные запуска:', data);
+
+    renderWeights(data.meta || {});
+    renderHeatmap(data);
+
+  } catch (err) {
+    console.error(err);
+    document.getElementById('weightsChart').innerHTML = '<div style="padding: 20px; text-align: center; color: #d11d1d;">Ошибка загрузки</div>';
+    document.getElementById('heatmapBody').innerHTML = '<tr><td colspan="10" style="text-align: center; padding: 40px; color: #d11d1d;">Ошибка загрузки</td></tr>';
+  }
+})();
+</script>
+{% endblock %}
