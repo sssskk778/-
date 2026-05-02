@@ -11,7 +11,7 @@
 
   <form id="scenarioEditForm" class="stack">
     <input id="name" type="text" value="{{ scenario.name }}" placeholder="Название сценария">
-    <textarea id="description" rows="3" placeholder="Описание">{{ scenario.description or '' }}</textarea>
+    <textarea id="description" rows="2" style="resize: none;" placeholder="Описание">{{ scenario.description or '' }}</textarea>
 
     <div class="row" style="gap: 12px;">
       <select id="method" style="flex: 1;">
@@ -20,24 +20,17 @@
       </select>
     </div>
 
-    <!-- СНАЧАЛА ВЫБОР КРИТЕРИЕВ -->
     <div id="criteriaBox" class="criteria-container"></div>
     <div id="criteriaLoading" style="display: none; text-align: center; padding: 20px; color: #667085;">Загрузка...</div>
 
-    <!-- ПОТОМ ПАНЕЛЬ SWARA -->
     <div id="swaraPanel" style="margin-top: 16px; display: none;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-        <h3 style="margin: 0; font-size: 16px; font-weight: 500;">Метод SWARA: настройка важности</h3>
-        <span id="swaraWeightsSum" style="font-weight: 600; color: #0f2747;">100%</span>
+      <div style="margin-bottom: 12px;">
+        <h3 style="margin: 0; font-size: 16px; font-weight: 500;">Настройка весовых коэффициентов</h3>
       </div>
-
       <p style="font-size: 13px; color: #667085; margin-bottom: 16px;">
-        Перетащите критерии по важности (сверху — самые важные).<br>
-        Для каждого критерия укажите, на сколько процентов он важнее следующего.
+        Отсортируйте критерии по важности
       </p>
-
       <div id="swaraContainer" class="swara-container"></div>
-
       <div id="swaraWeightsPreview" class="swara-preview" style="margin-top: 20px;"></div>
     </div>
 
@@ -50,370 +43,14 @@
   </form>
 </div>
 
-<style>
-.panel-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.back-arrow {
-  font-size: 28px;
-  text-decoration: none;
-  color: #1d2433;
-  line-height: 1;
-  padding: 0 8px;
-  border-radius: 8px;
-}
-
-.back-arrow:hover {
-  background: #f0f4fa;
-}
-
-.panel-head h1 {
-  font-size: 20px;
-  font-weight: 500;
-  margin: 0;
-}
-
-.criteria-container {
-  margin: 12px 0;
-}
-
-.criteria-group {
-  margin-bottom: 24px;
-  border: 1px solid #e4e7ec;
-  border-radius: 12px;
-  overflow: hidden;
-}
-
-.criteria-group-header {
-  background: #f8f9fc;
-  padding: 12px 16px;
-  font-weight: 600;
-  font-size: 14px;
-  color: #1d2433;
-  border-bottom: 1px solid #e4e7ec;
-  cursor: pointer;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  user-select: none;
-}
-
-.criteria-group-header:hover {
-  background: #f0f4fa;
-}
-
-.criteria-group-header .toggle-icon {
-  font-size: 12px;
-  color: #667085;
-  transition: transform 0.2s;
-}
-
-.criteria-group-header.collapsed .toggle-icon {
-  transform: rotate(-90deg);
-}
-
-.criteria-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 8px;
-  padding: 12px 16px;
-  background: #fff;
-}
-
-.criteria-group-header.collapsed + .criteria-grid {
-  display: none;
-}
-
-.check-card {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  border: 1px solid #dbe3ef;
-  border-radius: 8px;
-  background: #fbfcff;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.check-card:hover {
-  background: #eef3fe;
-  border-color: #0f2747;
-}
-
-.check-card input {
-  width: 16px;
-  height: 16px;
-  margin: 0;
-  cursor: pointer;
-  accent-color: #0f2747;
-}
-
-.check-card .criterion-name {
-  flex: 1;
-  font-size: 13px;
-  color: #1d2433;
-  font-weight: 500;
-}
-
-.check-card:has(input:checked) {
-  background: #0f2747;
-  border-color: #0f2747;
-}
-
-.check-card:has(input:checked) .criterion-name {
-  color: #fff;
-}
-
-.row {
-  display: flex;
-  align-items: center;
-}
-
-.gap {
-  gap: 12px;
-}
-
-input, textarea, select {
-  width: 100%;
-  padding: 10px 12px;
-  border-radius: 10px;
-  border: 1px solid #ccd7e5;
-  background: #fff;
-  font: inherit;
-  box-sizing: border-box;
-}
-
-textarea {
-  resize: vertical;
-}
-
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 10px 20px;
-  border-radius: 999px;
-  border: 1px solid #cfd9e6;
-  background: #fff;
-  color: #1d2433;
-  cursor: pointer;
-  text-decoration: none;
-  font-size: 14px;
-  transition: all 0.2s;
-}
-
-.btn-primary {
-  background: #0f2747;
-  color: #fff;
-  border-color: #0f2747;
-}
-
-.btn-primary:hover {
-  background: #1a3a62;
-  border-color: #1a3a62;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(15, 39, 71, 0.2);
-}
-
-.btn-primary:active {
-  transform: translateY(0);
-}
-
-.btn-danger {
-  background: #fff;
-  color: #d11d1d;
-  border-color: #d11d1d;
-}
-
-.btn-danger:hover {
-  background: #d11d1d;
-  color: #fff;
-}
-
-/* SWARA Styles */
-.swara-container {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-top: 16px;
-}
-
-.swara-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px;
-  background: #f8f9fc;
-  border-radius: 8px;
-  border: 1px solid #e4e7ec;
-  cursor: grab;
-  transition: all 0.2s;
-}
-
-.swara-item.dragging {
-  opacity: 0.5;
-  cursor: grabbing;
-}
-
-.swara-rank {
-  font-weight: 600;
-  color: #0f2747;
-  min-width: 30px;
-}
-
-.swara-name {
-  flex: 1;
-  font-size: 14px;
-  font-weight: 500;
-  color: #1d2433;
-}
-
-.swara-input {
-  width: 100px;
-  padding: 6px 10px;
-  border-radius: 6px;
-  border: 1px solid #cfd9e6;
-  background: #fff;
-  font-size: 13px;
-  text-align: right;
-}
-
-.swara-input:disabled {
-  background: #f0f4fa;
-  color: #667085;
-}
-
-.swara-input:invalid {
-  border-color: #d11d1d;
-}
-
-.swara-unit {
-  font-size: 13px;
-  color: #667085;
-  margin-left: 4px;
-}
-
-.swara-preview {
-  background: #f0f4fa;
-  border-radius: 8px;
-  padding: 16px;
-}
-
-.swara-weight-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 8px;
-}
-
-.swara-weight-name {
-  min-width: 200px;
-  font-size: 13px;
-  color: #1d2433;
-}
-
-.swara-weight-bar {
-  flex: 1;
-  height: 24px;
-  background: #dbe3ef;
-  border-radius: 999px;
-  overflow: hidden;
-}
-
-.swara-weight-fill {
-  height: 100%;
-  background: #0f2747;
-  border-radius: 999px;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  padding-right: 8px;
-  box-sizing: border-box;
-  color: white;
-  font-size: 11px;
-  font-weight: 600;
-}
-
-.swara-weight-value {
-  min-width: 50px;
-  text-align: right;
-  font-weight: 600;
-  color: #0f2747;
-}
-
-.toast-message {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  background: #1d2433;
-  color: white;
-  padding: 10px 16px;
-  border-radius: 8px;
-  font-size: 13px;
-  z-index: 1000;
-  animation: fadeIn 0.3s ease;
-}
-
-.toast-message.error {
-  background: #d11d1d;
-}
-
-@keyframes fadeIn {
-  from { transform: translateX(100%); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
-}
-</style>
-
 <script>
 const scenarioId = {{ scenario.id }};
 let currentScenario = null;
 let isLoading = false;
 let swaraRanking = [];
 let swaraSValues = {};
-
-// Актуальные 12 критериев
-const CRITERIA_GROUPS = {
-    'Надёжность и качество доставки': {
-        keys: ['otif', 'cancellation_rate', 'no_show_rate', 'damage_rate', 'claim_rate'],
-        names: {
-            'otif': 'Своевременная и полная доставка (OTIF)',
-            'cancellation_rate': 'Отмены рейсов',
-            'no_show_rate': 'Неявка на загрузку',
-            'damage_rate': 'Повреждения груза',
-            'claim_rate': 'Частота претензий'
-        }
-    },
-    'Исполнительная дисциплина': {
-        keys: ['tracking_compliance', 'pod_rate', 'payment_compliance'],
-        names: {
-            'tracking_compliance': 'GPS-трекинг',
-            'pod_rate': 'Подтверждение доставки (POD)',
-            'payment_compliance': 'Своевременность платежей'
-        }
-    },
-    'Поведенческая активность': {
-        keys: ['acceptance_rate', 'rejection_rate'],
-        names: {
-            'acceptance_rate': 'Принятие заказов',
-            'rejection_rate': 'Отказы от заявок'
-        }
-    },
-    'Репутация и лояльность': {
-        keys: ['repeat_order_rate', 'feedback_score'],
-        names: {
-            'repeat_order_rate': 'Повторные рейсы',
-            'feedback_score': 'Отзывы клиентов'
-        }
-    }
-};
-
-const CRITERIA_NAMES = {};
-Object.values(CRITERIA_GROUPS).forEach(g => Object.assign(CRITERIA_NAMES, g.names));
+let CRITERIA_GROUPS = {};
+let CRITERIA_NAMES = {};
 
 function showMessage(message, isError = false) {
   const existing = document.querySelector('.toast-message');
@@ -425,7 +62,58 @@ function showMessage(message, isError = false) {
   setTimeout(() => div.remove(), 2500);
 }
 
+function getCheckedCodes() {
+  return Array.from(document.querySelectorAll('#criteriaBox input:checked'))
+    .map(cb => cb.closest('.check-card').dataset.code);
+}
+
+async function loadCriteriaGroups() {
+  const res = await fetch('/api/criteria');
+  const criteria = await res.json();
+
+  CRITERIA_GROUPS = {
+    'Надёжность исполнения': {
+      keys: ['on_time_rate', 'cancellation_rate', 'no_show_rate'],
+      names: {}
+    },
+    'Сохранность и безопасность': {
+      keys: ['damage_rate', 'loss_rate', 'accident_rate'],
+      names: {}
+    },
+    'Прозрачность и документооборот': {
+      keys: ['tracking_compliance', 'pod_rate'],
+      names: {}
+    },
+    'Репутация': {
+      keys: ['feedback_score'],
+      names: {}
+    },
+    'Цена': {
+      keys: ['rate_per_km'],
+      names: {}
+    }
+  };
+
+  criteria.forEach(c => {
+    CRITERIA_NAMES[c.code] = c.name;
+    for (const group of Object.values(CRITERIA_GROUPS)) {
+      if (group.keys.includes(c.code)) {
+        group.names[c.code] = c.name;
+      }
+    }
+  });
+}
+
 async function loadScenario() {
+  await loadCriteriaGroups();
+
+  if (scenarioId === 0) {
+    currentScenario = { name: '', description: '', method: 'topsis', criterion_ids: [] };
+    document.getElementById('method').value = 'topsis';
+    await loadCriteria();
+    return;
+  }
+
   try {
     const sRes = await fetch(`/api/scenarios/${scenarioId}`);
     if (!sRes.ok) throw new Error('Ошибка загрузки сценария');
@@ -434,7 +122,6 @@ async function loadScenario() {
     document.getElementById('description').value = currentScenario.description || '';
     document.getElementById('method').value = currentScenario.method || 'topsis';
 
-    // Загружаем конфигурацию SWARA
     const swaraRes = await fetch(`/api/scenarios/${scenarioId}/weights/swara`);
     if (swaraRes.ok) {
       const swaraData = await swaraRes.json();
@@ -446,7 +133,6 @@ async function loadScenario() {
         }
       }
     }
-
     await loadCriteria();
   } catch (err) {
     showMessage(err.message, true);
@@ -462,7 +148,7 @@ async function loadCriteria() {
   loading.style.display = 'block';
 
   try {
-    const res = await fetch(`/api/criteria`);
+    const res = await fetch('/api/criteria');
     if (!res.ok) throw new Error('Ошибка загрузки критериев');
     const criteriaList = await res.json();
     const criteriaMap = new Map();
@@ -501,7 +187,7 @@ async function loadCriteria() {
           </label>
         `;
       }
-      html += `</div></div>`;
+      html += '</div></div>';
     }
     container.innerHTML = html;
 
@@ -513,19 +199,17 @@ async function loadCriteria() {
 
     container.querySelectorAll('.check-card input').forEach(cb => {
       cb.addEventListener('change', function() {
+        const checkedCodes = getCheckedCodes();
+        swaraRanking = swaraRanking.filter(code => checkedCodes.includes(code));
         renderSwaraPanel();
       });
     });
 
     container.style.display = 'block';
-
     document.getElementById('swaraPanel').style.display = 'block';
     renderSwaraPanel();
-
   } catch (err) {
     showMessage(err.message, true);
-    container.innerHTML = `<div style="padding: 20px; text-align: center; color: #d11d1d;">${err.message}</div>`;
-    container.style.display = 'block';
   } finally {
     isLoading = false;
     loading.style.display = 'none';
@@ -534,25 +218,25 @@ async function loadCriteria() {
 
 function renderSwaraPanel() {
   const container = document.getElementById('swaraContainer');
-  const selectedCheckboxes = document.querySelectorAll('#criteriaBox input:checked');
+  const checkedCodes = getCheckedCodes();
 
-  if (selectedCheckboxes.length === 0) {
-    container.innerHTML = '<p style="color: #667085; text-align: center;">Выберите хотя бы один критерий</p>';
+  Object.keys(swaraSValues).forEach(code => {
+    if (!checkedCodes.includes(code)) delete swaraSValues[code];
+  });
+
+  if (checkedCodes.length < 2) {
+    container.innerHTML = '<p style="color: #667085; text-align: center;">Выберите минимум 2 критерия для настройки SWARA</p>';
     document.getElementById('swaraWeightsPreview').innerHTML = '';
-    document.getElementById('swaraWeightsSum').textContent = '0%';
     return;
   }
 
-  const selectedCodes = Array.from(selectedCheckboxes).map(cb => {
-    const card = cb.closest('.check-card');
-    return {
-      code: card.dataset.code,
-      name: CRITERIA_NAMES[card.dataset.code] || card.dataset.code
-    };
-  });
+  const selectedCodes = checkedCodes.map(code => ({
+    code: code,
+    name: CRITERIA_NAMES[code] || code
+  }));
 
   const newRanking = [
-    ...swaraRanking.filter(code => selectedCodes.some(c => c.code === code)),
+    ...swaraRanking.filter(code => checkedCodes.includes(code)),
     ...selectedCodes.filter(c => !swaraRanking.includes(c.code)).map(c => c.code)
   ];
   swaraRanking = newRanking;
@@ -563,19 +247,22 @@ function renderSwaraPanel() {
     if (!criterion) return;
 
     const isFirst = index === 0;
+    const aboveName = index > 0 ? (CRITERIA_NAMES[swaraRanking[index - 1]] || swaraRanking[index - 1]) : '';
     const sValue = swaraSValues[code] !== undefined ? swaraSValues[code] : 20;
 
     html += `
       <div class="swara-item" draggable="true" data-code="${code}">
         <span class="swara-rank">${index + 1}.</span>
         <span class="swara-name">${criterion.name}</span>
-        ${!isFirst ? `
-          <input type="number" class="swara-input" data-code="${code}"
-                 value="${sValue}" min="0" max="100" step="1">
-          <span class="swara-unit">%</span>
+        ${isFirst ? `
+          <span class="swara-hint">самый важный</span>
         ` : `
-          <span style="width: 100px;"></span>
-          <span class="swara-unit"></span>
+          <div class="swara-right">
+            <span>«${aboveName}» важнее на</span>
+            <input type="number" class="swara-input" data-code="${code}"
+                   value="${sValue}" min="0" max="100" step="1">
+            <span class="swara-unit">%</span>
+          </div>
         `}
       </div>
     `;
@@ -583,13 +270,12 @@ function renderSwaraPanel() {
 
   container.innerHTML = html;
 
-  // Drag & Drop
   container.querySelectorAll('.swara-item').forEach(item => {
     item.addEventListener('dragstart', e => {
       e.dataTransfer.setData('text/plain', item.dataset.code);
       item.classList.add('dragging');
     });
-    item.addEventListener('dragend', e => item.classList.remove('dragging'));
+    item.addEventListener('dragend', () => item.classList.remove('dragging'));
     item.addEventListener('dragover', e => e.preventDefault());
     item.addEventListener('drop', e => {
       e.preventDefault();
@@ -601,31 +287,28 @@ function renderSwaraPanel() {
         swaraRanking.splice(draggedIndex, 1);
         swaraRanking.splice(targetIndex, 0, draggedCode);
         renderSwaraPanel();
-        updateWeightsPreview();
       }
     });
   });
 
-  // Обработчики полей ввода с валидацией
   container.querySelectorAll('.swara-input').forEach(input => {
-    input.addEventListener('input', function() {
-      const code = this.dataset.code;
-      let value = parseFloat(this.value) || 0;
-
+    const updateValue = () => {
+      const code = input.dataset.code;
+      let value = parseFloat(input.value) || 0;
       if (value < 0) value = 0;
       if (value > 100) value = 100;
-
-      this.value = value;
+      input.value = value;
       swaraSValues[code] = value;
       updateWeightsPreview();
-    });
+    };
 
+    input.addEventListener('input', updateValue);
     input.addEventListener('keydown', function(e) {
-      const allowedKeys = ['Backspace', 'Delete', 'Tab', 'Escape', 'Enter', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'];
-      if (allowedKeys.includes(e.key)) return;
-      if (!/^[0-9]$/.test(e.key)) e.preventDefault();
+      if (!/^[0-9]$/.test(e.key) && !['Backspace', 'Delete', 'Tab', 'Escape', 'Enter',
+           'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'].includes(e.key)) {
+        e.preventDefault();
+      }
     });
-
     input.addEventListener('paste', function(e) {
       e.preventDefault();
       const pastedText = (e.clipboardData || window.clipboardData).getData('text');
@@ -633,8 +316,8 @@ function renderSwaraPanel() {
         let value = parseInt(pastedText, 10);
         if (value < 0) value = 0;
         if (value > 100) value = 100;
-        this.value = value;
-        swaraSValues[this.dataset.code] = value;
+        input.value = value;
+        swaraSValues[input.dataset.code] = value;
         updateWeightsPreview();
       }
     });
@@ -644,40 +327,30 @@ function renderSwaraPanel() {
 }
 
 async function updateWeightsPreview() {
-  const selectedCodes = swaraRanking;
-
-  if (selectedCodes.length === 0) {
+  if (swaraRanking.length < 2) {
     document.getElementById('swaraWeightsPreview').innerHTML = '';
-    document.getElementById('swaraWeightsSum').textContent = '0%';
     return;
   }
 
-  const sValues = selectedCodes.slice(1).map(code => (swaraSValues[code] || 20) / 100);
+  const sValues = swaraRanking.slice(1).map(code => (swaraSValues[code] || 20) / 100);
 
   try {
-    const res = await fetch(`/api/scenarios/${scenarioId}/weights/swara/preview`, {
+    const previewId = scenarioId === 0 ? 1 : scenarioId;
+    const res = await fetch(`/api/scenarios/${previewId}/weights/swara/preview`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        ranking: selectedCodes,
-        s_values: sValues
-      })
+      body: JSON.stringify({ ranking: swaraRanking, s_values: sValues })
     });
-
     if (!res.ok) return;
 
     const data = await res.json();
     const weights = data.weights;
-
     let html = '<h4 style="margin-bottom: 12px; font-size: 14px;">Итоговые веса:</h4>';
-    let sum = 0;
 
-    selectedCodes.forEach(code => {
+    swaraRanking.forEach(code => {
       const weight = weights[code] || 0;
-      sum += weight;
       const percent = (weight * 100).toFixed(1);
       const name = CRITERIA_NAMES[code] || code;
-
       html += `
         <div class="swara-weight-row">
           <span class="swara-weight-name">${name}</span>
@@ -688,26 +361,21 @@ async function updateWeightsPreview() {
         </div>
       `;
     });
-
     document.getElementById('swaraWeightsPreview').innerHTML = html;
-    document.getElementById('swaraWeightsSum').textContent = `${Math.round(sum * 100)}%`;
   } catch (err) {
     console.error('Ошибка предпросмотра весов:', err);
   }
 }
 
 function getPayload() {
-  const selectedCodes = swaraRanking;
-  const sValues = selectedCodes.slice(1).map(code => (swaraSValues[code] || 20) / 100);
-
+  const sValues = swaraRanking.slice(1).map(code => (swaraSValues[code] || 20) / 100);
   return {
     name: document.getElementById('name').value.trim(),
     description: document.getElementById('description').value.trim(),
     method: document.getElementById('method').value,
-    weight_mode: 'swara',
     criterion_ids: Array.from(document.querySelectorAll('#criteriaBox input:checked')).map(x => Number(x.value)),
     swara_config: {
-      ranking: selectedCodes,
+      ranking: swaraRanking,
       s_values: sValues
     }
   };
@@ -715,8 +383,8 @@ function getPayload() {
 
 function validate(payload) {
   if (!payload.name) return 'Введите название';
-  if (payload.criterion_ids.length === 0) return 'Выберите хотя бы один критерий';
-  if (payload.swara_config.ranking.length === 0) return 'Настройте важность критериев';
+  if (payload.criterion_ids.length < 2) return 'Выберите минимум 2 критерия';
+  if (payload.swara_config.ranking.length < 2) return 'Настройте важность критериев (минимум 2)';
   return null;
 }
 
@@ -729,8 +397,12 @@ async function saveScenario(showToast = true) {
   }
 
   try {
-    const res = await fetch(`/api/scenarios/${scenarioId}`, {
-      method: 'PUT',
+    const isNew = scenarioId === 0;
+    const url = isNew ? '/api/scenarios' : `/api/scenarios/${scenarioId}`;
+    const method = isNew ? 'POST' : 'PUT';
+
+    const res = await fetch(url, {
+      method: method,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
@@ -739,34 +411,32 @@ async function saveScenario(showToast = true) {
       throw new Error(err.error || 'Ошибка сохранения');
     }
 
-    await fetch(`/api/scenarios/${scenarioId}/weights/swara`, {
+    const data = await res.json();
+    const savedId = isNew ? data.id : scenarioId;
+
+    await fetch(`/api/scenarios/${savedId}/weights/swara`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload.swara_config)
     });
 
-    if (showToast) {
-      showMessage('Сохранено');
-    }
-
-    // Переход на главную страницу
-    setTimeout(() => {
-      window.location.href = '/';
-    }, 500);
-
+    if (showToast) showMessage('Сохранено');
+    setTimeout(() => { window.location.href = '/'; }, 500);
     return true;
   } catch (err) {
     showMessage(err.message, true);
     return false;
   }
 }
-document.getElementById('saveBtn').addEventListener('click', async () => {
-  await saveScenario(true);
-});
+
+document.getElementById('saveBtn').addEventListener('click', () => saveScenario(true));
 
 document.getElementById('deleteBtn').addEventListener('click', async () => {
-  const name = document.getElementById('name').value;
-  if (!confirm(`Удалить сценарий "${name}"?`)) return;
+  if (scenarioId === 0) {
+    window.location.href = '/';
+    return;
+  }
+  if (!confirm(`Удалить сценарий "${document.getElementById('name').value}"?`)) return;
   try {
     const res = await fetch(`/api/scenarios/${scenarioId}`, { method: 'DELETE' });
     if (!res.ok) throw new Error('Ошибка удаления');

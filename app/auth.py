@@ -1,5 +1,6 @@
 from functools import wraps
 from flask import session, redirect, url_for, abort
+from app import db
 from app.models import User
 
 class Roles:
@@ -8,7 +9,7 @@ class Roles:
 
 def current_user():
     uid = session.get('user_id')
-    return User.query.get(uid) if uid else None
+    return db.session.get(User, uid) if uid else None
 
 def login_required(view):
     @wraps(view)

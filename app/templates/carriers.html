@@ -2,224 +2,10 @@
 {% block title %}Перевозчики{% endblock %}
 
 {% block content %}
-<style>
-  .stats-banner {
-    background: rgba(30, 58, 95, 0.15);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    color: #1e3a5f;
-    border-radius: 12px;
-    padding: 14px 18px;
-    margin-bottom: 20px;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: 16px;
-    text-align: center;
-    box-shadow: 0 4px 16px rgba(30, 58, 95, 0.06);
-    border: 1px solid rgba(30, 58, 95, 0.15);
-  }
-
-  .stats-banner h3 {
-    font-size: 12px;
-    opacity: 0.9;
-    margin-bottom: 5px;
-    font-weight: 400;
-  }
-
-  .stats-banner .value {
-    font-size: 24px;
-    font-weight: bold;
-  }
-
-  .panel-head {
-    display: flex;
-    align-items: center;
-    margin-bottom: 20px;
-    position: relative;
-  }
-
-  .back-arrow {
-    font-size: 28px;
-    text-decoration: none;
-    color: #1d2433;
-    line-height: 1;
-    padding: 0 8px;
-    border-radius: 8px;
-    transition: background 0.15s;
-    position: absolute;
-    left: 0;
-  }
-
-  .back-arrow:hover {
-    background: #f0f4fa;
-  }
-
-  .panel-head h1 {
-    font-size: 20px;
-    font-weight: 500;
-    margin: 0 auto;
-    text-align: center;
-    width: 100%;
-  }
-
-  .filters-bar {
-    background: #f8fafd;
-    border-radius: 12px;
-    padding: 16px;
-    margin-bottom: 20px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    align-items: flex-end;
-  }
-
-  .filter-group {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    min-width: 180px;
-  }
-
-  .filter-group label {
-    font-size: 11px;
-    color: #667085;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
-  .filter-group select, .filter-group input {
-    padding: 8px 12px;
-    border-radius: 8px;
-    border: 1px solid #ccd7e5;
-    font-size: 13px;
-    background: white;
-  }
-
-  .search-group {
-    flex: 2;
-    min-width: 250px;
-  }
-
-  .carrier-table {
-    background: white;
-    border-radius: 12px;
-    overflow: hidden;
-    border: 1px solid #e2e8f0;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-  }
-
-  .carrier-table table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-
-  .carrier-table th {
-    background: #f8fafd;
-    padding: 14px 16px;
-    text-align: left;
-    font-size: 12px;
-    font-weight: 600;
-    color: #475569;
-    border-bottom: 1px solid #e2e8f0;
-    white-space: nowrap;
-  }
-
-  .carrier-table td {
-    padding: 14px 16px;
-    font-size: 13px;
-    border-bottom: 1px solid #f1f5f9;
-  }
-
-  .carrier-table tr:hover {
-    background: #fafbfc;
-  }
-
-  .badge-region {
-    background: #e0e7ff;
-    color: #3730a3;
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 11px;
-  }
-
-  .badge-fleet {
-    background: #f1f5f9;
-    color: #475569;
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 11px;
-  }
-
-  .btn-reset {
-    background: white;
-    color: #64748b;
-    border: 1px solid #ccd7e5;
-    padding: 8px 16px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 13px;
-    transition: all 0.15s;
-  }
-
-  .btn-reset:hover {
-    background: #f1f5f9;
-  }
-
-  .pagination {
-    display: flex;
-    justify-content: center;
-    gap: 6px;
-    margin-top: 24px;
-  }
-
-  .pagination button {
-    padding: 8px 14px;
-    border-radius: 8px;
-    border: 1px solid #cfd9e6;
-    background: #fff;
-    cursor: pointer;
-    font-size: 13px;
-    transition: all 0.15s;
-  }
-
-  .pagination button.active {
-    background: #2c67f2;
-    color: white;
-    border-color: #2c67f2;
-  }
-
-  .pagination button:hover:not(.active) {
-    background: #f1f5f9;
-  }
-
-  .pagination button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  .loading {
-    text-align: center;
-    padding: 40px;
-    color: #6b7280;
-  }
-
-  .empty-state {
-    text-align: center;
-    padding: 40px;
-    color: #6b7280;
-  }
-
-  .results-info {
-    font-size: 12px;
-    color: #64748b;
-    margin-top: 10px;
-  }
-</style>
 
 <div class="panel">
   <div class="panel-head">
-    <a href="{{ url_for('web.index') }}" class="back-arrow">←</a>
+    <a href="{{ url_for('web.dataset_page') }}" class="back-arrow">←</a>
     <h1>Перевозчики</h1>
   </div>
 
@@ -243,7 +29,7 @@
   <div class="filters-bar">
     <div class="filter-group search-group">
       <label>Поиск</label>
-      <input type="text" id="searchInput" placeholder="Название или ИНН...">
+      <input type="text" id="searchInput" placeholder="Название...">
     </div>
     <div class="filter-group">
       <label>Регион</label>
@@ -257,7 +43,7 @@
         <option value="">Все типы</option>
       </select>
     </div>
-    <button class="btn-reset" onclick="resetFilters()">Сбросить</button>
+    <button class="btn-reset" onclick="resetFilters()" style="height: 40px; align-self: flex-end;">Сбросить</button>
   </div>
 
   <!-- Таблица -->
@@ -267,13 +53,12 @@
         <tr>
           <th>ID</th>
           <th>Название</th>
-          <th>ИНН</th>
           <th>Регион</th>
           <th>Тип автопарка</th>
         </tr>
       </thead>
       <tbody id="carriersTableBody">
-        <tr><td colspan="5" class="loading">Загрузка...</td></tr>
+        <tr><td colspan="4" class="loading">Загрузка...</td></tr>
       </tbody>
     </table>
   </div>
@@ -302,7 +87,7 @@ async function loadCarriers() {
   } catch (error) {
     console.error('Ошибка загрузки:', error);
     document.getElementById('carriersTableBody').innerHTML =
-      '<tr><td colspan="5" style="text-align: center; color: #d11d1d; padding: 40px;">Ошибка загрузки</td></tr>';
+      '<tr><td colspan="4" style="text-align: center; color: #d11d1d; padding: 40px;">Ошибка загрузки</td></tr>';
   }
 }
 
@@ -351,9 +136,8 @@ function applyFilters() {
 
   filteredCarriers = allCarriers.filter(c => {
     if (searchTerm) {
-      const nameMatch = c.name?.toLowerCase().includes(searchTerm);
-      const innMatch = c.inn?.includes(searchTerm);
-      if (!nameMatch && !innMatch) return false;
+      const nameMatch = (c.company_name || '').toLowerCase().includes(searchTerm);
+      if (!nameMatch) return false;
     }
     if (region && c.region !== region) return false;
     if (fleet && c.fleet_type !== fleet) return false;
@@ -379,7 +163,7 @@ function renderTable() {
   const pageCarriers = filteredCarriers.slice(start, start + itemsPerPage);
 
   if (pageCarriers.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Перевозчики не найдены</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="4" class="empty-state">Перевозчики не найдены</td></tr>';
     document.getElementById('pagination').innerHTML = '';
     return;
   }
@@ -387,8 +171,7 @@ function renderTable() {
   tbody.innerHTML = pageCarriers.map(c => `
     <tr>
       <td><span style="font-family: monospace;">${c.carrier_id}</span></td>
-      <td><strong>${escapeHtml(c.name || c.company_name)}</strong></td>
-      <td><span style="font-family: monospace; font-size: 12px;">${c.inn || '—'}</span></td>
+      <td><strong>${escapeHtml(c.company_name)}</strong></td>
       <td>${c.region ? `<span class="badge-region">${escapeHtml(c.region)}</span>` : '—'}</td>
       <td>${c.fleet_type ? `<span class="badge-fleet">${escapeHtml(c.fleet_type)}</span>` : '—'}</td>
     </tr>

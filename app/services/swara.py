@@ -1,55 +1,108 @@
-# app/services/swara.py
 """
-Метод SWARA (Step-wise Weight Assessment Ratio Analysis)
-для расчёта весов критериев на основе экспертного ранжирования
-и сравнительной важности.
+Модуль расчета весов критериев методом SWARA.
+Step-wise Weight Assessment Ratio Analysis — метод пошагового
+определения весов на основе экспертного ранжирования критериев.
+
+Автор: Лосева Е.А.
+Дата создания: ДД.ММ.ГГГГ
+Последнее изменение: ДД.ММ.ГГГГ
+Контакт: ekaterinaloseva91@gmail.com
 """
+import math
 
 class SwaraService:
-    """Расчёт весов методом SWARA"""
+    """
+    Назначение:
+        Расчет весов критериев методом SWARA.
+    Параметры:
+        Нет.
+    Возвращает:
+        dict[str, float]: Словарь {код_критерия: вес}, сумма весов = 1.
+    """
 
     @staticmethod
     def compute(ranking: list[str], s_values: list[float]) -> dict[str, float]:
         """
-        Рассчитывает веса критериев методом SWARA.
-
-        :param ranking: Список кодов критериев от ВАЖНОГО к НЕВАЖНОМУ
-        :param s_values: Список сравнительной важности s_j для j = 2..n
-                         (на сколько процентов критерий j-1 важнее критерия j)
-        :return: Словарь {code: weight}, сумма весов = 1
+        Назначение:
+            Расчет весов критериев методом SWARA.
+        Параметры:
+            ranking (list[str]): Критерии от важного к неважному.
+            s_values (list[float]): Сравнительная важность (на сколько % j-1 важнее j).
+        Возвращает:
+            dict[str, float]: {код_критерия: вес}, сумма весов = 1.
         """
+
+        if not isinstance(ranking, list):
+            raise TypeError(f"ranking must be list, got {type(ranking).__name__}")
+        if not isinstance(s_values, list):
+            raise TypeError(f"s_values must be list, got {type(s_values).__name__}")
+
         n = len(ranking)
+
+        if n == 0:
+            raise ValueError("ranking cannot be empty")
+        if n < 2:
+            raise ValueError(f"Need at least 2 criteria, got {n}")
+
+        if len(set(ranking)) != n:
+            duplicates = [c for c in ranking if ranking.count(c) > 1]
+            unique_dupes = list(set(duplicates))
+            raise ValueError(f"Duplicate criteria in ranking: {unique_dupes}")
 
         if len(s_values) != n - 1:
             raise ValueError(f"Ожидается {n - 1} значений s_values, получено {len(s_values)}")
 
-        # Шаг 1: Коэффициенты k_j
-        k = [1.0]  # k_1 = 1
-        for s in s_values:
+        for idx, s in enumerate(s_values):
+            if not isinstance(s, (int, float)):
+                raise TypeError(f"s_values[{idx}] must be int or float, got {type(s).__name__}")
+            if isinstance(s, float) and math.isnan(s):
+                raise ValueError(f"s_values[{idx}] is NaN")
             if s < 0:
                 raise ValueError(f"Сравнительная важность не может быть отрицательной: {s}")
+
+        k = [1.0]
+        for s in s_values:
             k.append(s + 1.0)
 
-        # Шаг 2: Пересчитанные веса q_j
-        q = [1.0]  # q_1 = 1
+        q = [1.0]
         for j in range(1, n):
             q.append(q[j - 1] / k[j])
 
-        # Шаг 3: Нормализация
         total_q = sum(q)
-        weights = {ranking[j]: q[j] / total_q for j in range(n)}
+        if total_q < 1e-12:
+            raise ValueError("Sum of intermediate weights is zero, check s_values")
 
+        weights = {ranking[j]: q[j] / total_q for j in range(n)}
         return weights
 
     @staticmethod
     def validate_s_values(s_values: list[float]) -> bool:
-        """Проверяет, что все s_values >= 0."""
-        return all(s >= 0 for s in s_values)
+        """
+        Назначение:
+            Проверка корректности значений сравнительной важности.
+        Параметры:
+            s_values (list[float]): Значения сравнительной важности.
+        Возвращает:
+            bool: True если все значения >= 0 и не NaN.
+        """
+        if not isinstance(s_values, list):
+            return False
+        return all(
+            isinstance(s, (int, float))
+            and not (isinstance(s, float) and math.isnan(s))
+            and s >= 0
+            for s in s_values
+        )
 
     @staticmethod
     def preview_weights(ranking: list[str], s_values: list[float]) -> dict[str, float]:
         """
-        Предварительный расчёт весов (без сохранения).
-        Используется для динамического обновления в интерфейсе.
+        Назначение:
+            Предварительный расчет весов для отображения в интерфейсе.
+        Параметры:
+            ranking (list[str]): Критерии от важного к неважному.
+            s_values (list[float]): Сравнительная важность.
+        Возвращает:
+            dict[str, float]: {код_критерия: вес}.
         """
         return SwaraService.compute(ranking, s_values)

@@ -1,16 +1,21 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate  # ← ДОБАВИТЬ
+from flask_migrate import Migrate
+from flasgger import Swagger
 
 _db = SQLAlchemy()
 db = _db
-migrate = Migrate()  # ← ДОБАВИТЬ
+migrate = Migrate()
+swagger = Swagger()
+
 
 def create_app():
     app = Flask(__name__, template_folder='templates', static_folder='static')
     app.config.from_object('config.Config')
+
     _db.init_app(app)
-    migrate.init_app(app, _db)  # ← ДОБАВИТЬ
+    migrate.init_app(app, _db)
+    swagger.init_app(app)
 
     from app.routes.auth import auth_bp
     from app.routes.web import web_bp

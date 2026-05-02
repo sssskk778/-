@@ -9,9 +9,6 @@
     <div style="width: 30px;"></div>
   </div>
 
-  <div id="runInfo" class="run-info"></div>
-
-  <!-- Фильтры -->
   <div class="filters">
     <div class="filter-grid">
       <div class="filter-group">
@@ -34,7 +31,7 @@
         <label id="scoreLabel">Оценка от</label>
         <input type="number" id="minScoreInput" step="0.01" min="0" max="1" placeholder="0.00">
       </div>
-      <button class="btn btn-reset" id="resetFiltersBtn">Сбросить</button>
+      <button class="btn btn-reset" id="resetFiltersBtn" style="height: 38px;">Сбросить</button>
     </div>
   </div>
 
@@ -56,10 +53,8 @@
     </table>
   </div>
 
-  <!-- Пагинация -->
   <div class="pagination" id="pagination"></div>
 
-  <!-- Кнопки внизу -->
   <div class="bottom-actions">
     <button class="btn" id="openRunBtn" type="button">Детали расчета</button>
     <button class="btn" id="exportBtn" type="button">Экспорт</button>
@@ -68,302 +63,6 @@
     {% endif %}
   </div>
 </div>
-
-<style>
-.panel-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.back-arrow {
-  font-size: 28px;
-  text-decoration: none;
-  color: #1d2433;
-  line-height: 1;
-  padding: 0 8px;
-  border-radius: 8px;
-}
-
-.back-arrow:hover {
-  background: #f0f4fa;
-}
-
-.panel-head h1 {
-  font-size: 20px;
-  font-weight: 500;
-  margin: 0;
-}
-
-.run-info {
-  background: #f0f4fa;
-  padding: 12px 16px;
-  border-radius: 10px;
-  margin-bottom: 20px;
-  font-size: 14px;
-  color: #1d2433;
-}
-
-.filters {
-  background: #f8fafd;
-  border-radius: 12px;
-  padding: 16px;
-  margin-bottom: 20px;
-  border: 1px solid #e2e8f0;
-}
-
-.filter-grid {
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1fr auto;
-  gap: 12px;
-  align-items: end;
-}
-
-.filter-group {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.filter-group label {
-  font-size: 12px;
-  color: #667085;
-  font-weight: 500;
-}
-
-.filter-group input,
-.filter-group select {
-  padding: 8px 12px;
-  border-radius: 8px;
-  border: 1px solid #ccd7e5;
-  background: #fff;
-  font-size: 13px;
-}
-
-.btn-reset {
-  padding: 8px 16px;
-  background: white;
-  color: #64748b;
-  border: 1px solid #ccd7e5;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 13px;
-  white-space: nowrap;
-}
-
-.btn-reset:hover {
-  background: #f1f5f9;
-}
-
-.table-wrap {
-  overflow-x: auto;
-}
-
-.table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 14px;
-  background: white;
-  border-radius: 12px;
-  overflow: hidden;
-}
-
-.table th {
-  background: #f8fafd;
-  padding: 12px 16px;
-  text-align: left;
-  font-size: 12px;
-  font-weight: 600;
-  color: #475569;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-.table td {
-  padding: 12px 16px;
-  border-bottom: 1px solid #f1f5f9;
-}
-
-.table tbody tr:hover {
-  background: #fafbfc;
-}
-
-.score-excellent {
-  color: #10b981;
-  font-weight: 600;
-}
-
-.score-good {
-  color: #3b82f6;
-  font-weight: 600;
-}
-
-.score-medium {
-  color: #f59e0b;
-  font-weight: 600;
-}
-
-.score-low {
-  color: #ef4444;
-  font-weight: 600;
-}
-
-.badge-level {
-  padding: 4px 10px;
-  border-radius: 20px;
-  font-size: 11px;
-  font-weight: 600;
-  display: inline-block;
-}
-
-.level-excellent {
-  background: #d1fae5;
-  color: #065f46;
-}
-
-.level-good {
-  background: #dbeafe;
-  color: #1e40af;
-}
-
-.level-medium {
-  background: #fef3c7;
-  color: #92400e;
-}
-
-.level-low {
-  background: #fee2e2;
-  color: #991b1b;
-}
-
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 16px;
-  border-radius: 999px;
-  border: 1px solid #cfd9e6;
-  background: #fff;
-  color: #1d2433;
-  cursor: pointer;
-  text-decoration: none;
-  font-size: 14px;
-}
-
-.btn-primary {
-  background: #0f2747;
-  color: #fff;
-  border-color: #0f2747;
-}
-
-.btn-primary:hover {
-  background: #1a3a62;
-  border-color: #1a3a62;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(15, 39, 71, 0.2);
-}
-
-.btn-primary:active {
-  transform: translateY(0);
-}
-
-.pagination {
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-  margin: 20px 0;
-}
-
-.pagination button {
-  padding: 6px 12px;
-  border-radius: 8px;
-  border: 1px solid #cfd9e6;
-  background: #fff;
-  cursor: pointer;
-}
-
-.pagination button.active {
-  background: #2c67f2;
-  color: #fff;
-  border-color: #2c67f2;
-}
-
-.bottom-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  margin-top: 24px;
-  padding-top: 16px;
-  border-top: 1px solid #e8edf5;
-}
-
-.loading-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0,0,0,0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid #fff;
-  border-top-color: #2c67f2;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.toast-message {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  background: #1d2433;
-  color: white;
-  padding: 10px 16px;
-  border-radius: 8px;
-  font-size: 13px;
-  z-index: 1000;
-  animation: fadeIn 0.3s ease;
-}
-
-.toast-message.success {
-  background: #10b981;
-}
-
-.toast-message.error {
-  background: #d11d1d;
-}
-
-@keyframes fadeIn {
-  from { transform: translateX(100%); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
-}
-
-@media (max-width: 900px) {
-  .filter-grid {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
-@media (max-width: 600px) {
-  .filter-grid {
-    grid-template-columns: 1fr;
-  }
-  .bottom-actions {
-    flex-direction: column;
-  }
-}
-</style>
 
 <script>
 const scenarioId = {{ scenario.id }};
@@ -394,9 +93,7 @@ function getScoreLevel(score) {
 }
 
 function getLevelScore(result) {
-  if (currentMethod.includes('VIKOR')) {
-    return 1 - result.score;
-  }
+  if (currentMethod.includes('VIKOR')) return 1 - result.score;
   return result.score;
 }
 
@@ -424,99 +121,72 @@ function showLoading(show) {
   }
 }
 
-function formatDate(dateStr) {
-  if (!dateStr) return '';
-  const d = new Date(dateStr);
-  return d.toLocaleString('ru-RU');
-}
-
 function escapeHtml(str) {
   if (!str) return '';
-  return str.replace(/[&<>]/g, function(m) {
-    if (m === '&') return '&amp;';
-    if (m === '<') return '&lt;';
-    if (m === '>') return '&gt;';
-    return m;
-  });
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
 }
 
 async function loadCarriers() {
   try {
     const res = await fetch('/api/carriers');
+    if (!res.ok) throw new Error(`Ошибка ${res.status}`);
     carriersData = await res.json();
     populateFilters();
   } catch (err) {
     console.error('Ошибка загрузки перевозчиков:', err);
+    carriersData = [];
   }
 }
 
 function populateFilters() {
   const regions = new Set();
   const fleets = new Set();
-
   carriersData.forEach(c => {
     if (c.region) regions.add(c.region);
     if (c.fleet_type) fleets.add(c.fleet_type);
   });
-
   const regionSelect = document.getElementById('regionFilter');
   regionSelect.innerHTML = '<option value="">Все регионы</option>';
   [...regions].sort().forEach(r => {
     const option = document.createElement('option');
-    option.value = r;
-    option.textContent = r;
+    option.value = r; option.textContent = r;
     regionSelect.appendChild(option);
   });
-
   const fleetSelect = document.getElementById('fleetFilter');
   fleetSelect.innerHTML = '<option value="">Все типы</option>';
   [...fleets].sort().forEach(f => {
     const option = document.createElement('option');
-    option.value = f;
-    option.textContent = f;
+    option.value = f; option.textContent = f;
     fleetSelect.appendChild(option);
   });
 }
 
 function enrichResults() {
   const carrierMap = new Map();
-  carriersData.forEach(c => {
-    carrierMap.set(c.carrier_id, c);
-  });
-
+  carriersData.forEach(c => carrierMap.set(c.carrier_id, c));
   allResults = allResults.map(r => {
     const carrier = carrierMap.get(r.carrier_id) || {};
-    return {
-      ...r,
-      region: carrier.region || '—',
-      fleet_type: carrier.fleet_type || '—'
-    };
+    return { ...r, region: carrier.region || '—', fleet_type: carrier.fleet_type || '—' };
   });
 }
 
 function getFiltered() {
   let filtered = [...allResults];
-
   const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-  if (searchTerm) {
-    filtered = filtered.filter(r => r.company_name.toLowerCase().includes(searchTerm));
-  }
-
+  if (searchTerm) filtered = filtered.filter(r => r.company_name.toLowerCase().includes(searchTerm));
   const region = document.getElementById('regionFilter').value;
-  if (region) {
-    filtered = filtered.filter(r => r.region === region);
-  }
-
+  if (region) filtered = filtered.filter(r => r.region === region);
   const fleet = document.getElementById('fleetFilter').value;
-  if (fleet) {
-    filtered = filtered.filter(r => r.fleet_type === fleet);
-  }
-
+  if (fleet) filtered = filtered.filter(r => r.fleet_type === fleet);
   const minScore = parseFloat(document.getElementById('minScoreInput').value);
   if (!isNaN(minScore)) {
-    filtered = filtered.filter(r => r.score >= minScore);
+    filtered = filtered.filter(r => {
+      const displayScore = currentMethod.includes('VIKOR') ? 1 - r.score : r.score;
+      return displayScore >= minScore;
+    });
   }
-
   return filtered;
 }
 
@@ -525,44 +195,35 @@ function renderTable() {
   const totalPages = Math.ceil(filtered.length / rowsPerPage);
   const start = (currentPage - 1) * rowsPerPage;
   const pageResults = filtered.slice(start, start + rowsPerPage);
-
   const tbody = document.querySelector('#resultsTable tbody');
-
   if (pageResults.length === 0) {
     tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Нет результатов</td></tr>';
   } else {
     tbody.innerHTML = pageResults.map(r => {
       const levelScore = getLevelScore(r);
       const level = getScoreLevel(levelScore);
-      return `
-        <tr>
-          <td>${r.rank}</td>
-          <td><strong>${escapeHtml(r.company_name)}</strong></td>
-          <td>${r.region !== '—' ? escapeHtml(r.region) : '—'}</td>
-          <td>${r.fleet_type !== '—' ? formatFleetType(r.fleet_type) : '—'}</td>
-          <td>${r.score.toFixed(4)}</td>
-          <td><span class="badge-level ${level.class}">${level.text}</span></td>
-        </tr>
-      `;
+      const displayScore = currentMethod.includes('VIKOR') ? (1 - r.score).toFixed(4) : r.score.toFixed(4);
+      return `<tr>
+        <td>${r.rank}</td>
+        <td><strong>${escapeHtml(r.company_name)}</strong></td>
+        <td>${r.region !== '—' ? escapeHtml(r.region) : '—'}</td>
+        <td>${r.fleet_type !== '—' ? escapeHtml(r.fleet_type) : '—'}</td>
+        <td>${displayScore}</td>
+        <td><span class="badge-level ${level.class}">${level.text}</span></td>
+      </tr>`;
     }).join('');
   }
-
   renderPagination(totalPages);
 }
 
 function renderPagination(totalPages) {
   const container = document.getElementById('pagination');
-  if (totalPages <= 1) {
-    container.innerHTML = '';
-    return;
-  }
-
+  if (totalPages <= 1) { container.innerHTML = ''; return; }
   let html = '';
   for (let i = 1; i <= totalPages; i++) {
     html += `<button class="${i === currentPage ? 'active' : ''}" data-page="${i}">${i}</button>`;
   }
   container.innerHTML = html;
-
   container.querySelectorAll('button').forEach(btn => {
     btn.addEventListener('click', () => {
       currentPage = parseInt(btn.dataset.page);
@@ -583,44 +244,26 @@ function resetFilters() {
 async function load() {
   const tbody = document.querySelector('#resultsTable tbody');
   tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Загрузка...</td></tr>';
-
   try {
     await loadCarriers();
-
     const res = await fetch(`/api/scenarios/${scenarioId}/latest-results`);
     if (!res.ok) throw new Error('Ошибка загрузки');
-
     const data = await res.json();
     latestRunId = data.run ? data.run.id : null;
-
-    const runInfo = document.getElementById('runInfo');
-    const criteriaCount = (data.meta && data.meta.criteria_codes) ? data.meta.criteria_codes.length : '?';
-    const methodName = (data.meta && data.meta.method) || 'TOPSIS + SWARA';
-    currentMethod = methodName;
-
-    if (data.run && data.run.started_at) {
-      runInfo.style.display = 'block';
-      runInfo.innerHTML = `
-        <strong>Расчёт от ${formatDate(data.run.started_at)}</strong><br>
-        Критериев: ${criteriaCount} | Перевозчиков: ${(data.results || []).length}<br>
-        Метод: ${methodName}
-      `;
-    } else {
-      runInfo.style.display = 'none';
-    }
+    currentMethod = (data.meta && data.meta.method) || 'TOPSIS + SWARA';
     allResults = data.results || [];
     enrichResults();
     currentPage = 1;
     renderTable();
   } catch (err) {
-    console.error(err);
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #d11d1d;">Ошибка загрузки</td></tr>';
+    console.error('Load error:', err);
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #d11d1d;">${err.message}</td></tr>`;
   }
 }
 
 document.getElementById('openRunBtn').addEventListener('click', () => {
   if (latestRunId) {
-    window.location.href = `/runs/${latestRunId}`;
+    window.location.href = `/runs/${latestRunId}?from=results`;
   } else {
     showMessage('Нет запусков', 'error');
   }
@@ -631,26 +274,10 @@ document.getElementById('exportBtn').addEventListener('click', () => {
 });
 
 document.getElementById('resetFiltersBtn').addEventListener('click', resetFilters);
-
-document.getElementById('searchInput').addEventListener('input', () => {
-  currentPage = 1;
-  renderTable();
-});
-
-document.getElementById('regionFilter').addEventListener('change', () => {
-  currentPage = 1;
-  renderTable();
-});
-
-document.getElementById('fleetFilter').addEventListener('change', () => {
-  currentPage = 1;
-  renderTable();
-});
-
-document.getElementById('minScoreInput').addEventListener('input', () => {
-  currentPage = 1;
-  renderTable();
-});
+document.getElementById('searchInput').addEventListener('input', () => { currentPage = 1; renderTable(); });
+document.getElementById('regionFilter').addEventListener('change', () => { currentPage = 1; renderTable(); });
+document.getElementById('fleetFilter').addEventListener('change', () => { currentPage = 1; renderTable(); });
+document.getElementById('minScoreInput').addEventListener('input', () => { currentPage = 1; renderTable(); });
 
 const rerunBtn = document.getElementById('rerunBtn');
 if (rerunBtn) {
@@ -659,11 +286,14 @@ if (rerunBtn) {
     showLoading(true);
     try {
       const res = await fetch(`/api/scenarios/${scenarioId}/run`, { method: 'POST' });
-      if (!res.ok) throw new Error('Ошибка');
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Ошибка');
+      }
       showMessage('Расчёт завершён', 'success');
       await load();
     } catch (err) {
-      showMessage('Ошибка перерасчёта', 'error');
+      showMessage(err.message || 'Ошибка перерасчёта', 'error');
     } finally {
       showLoading(false);
     }

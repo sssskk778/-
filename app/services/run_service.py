@@ -1,6 +1,14 @@
-# app/services/run_service.py
+"""
+Описание: Модуль сервиса запуска расчета рейтинга перевозчиков.
+Содержит класс RunService, реализующий выполнение многокритериальной
+оценки методами TOPSIS и VIKOR с весами SWARA.
+Автор: Лосева Е.А.
+Дата создания: ДД.ММ.ГГГГ
+Последнее изменение: ДД.ММ.ГГГГ
+Контакт: ekaterinaloseva91@gmail.com
+"""
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 import numpy as np
 from app import db
 from app.models import Scenario, ScenarioCriterion, Run, RunResult, Criterion, Carrier
@@ -9,175 +17,182 @@ from app.services.criterion_calc import CriteriaCalculator
 from app.services.topsis import TopsisService
 from app.services.vikor import VikorService
 
-
 class RunService:
+    """
+    Назначение:
+        Сервис запуска расчета рейтинга перевозчиков методами TOPSIS или VIKOR, SWARA.
+    Параметры:
+        topsis (TopsisService): Экземпляр сервиса TOPSIS.
+        vikor (VikorService): Экземпляр сервиса VIKOR.
+    Возвращает:
+        Run: Объект запуска с результатами.
+    """
+    VALID_METHODS = {'topsis', 'vikor'}
+
     def __init__(self):
+        """
+        Назначение:
+            Инициализация сервиса.
+        Параметры:
+            Нет.
+        Возвращает:
+            None.
+        """
         self.topsis = TopsisService()
         self.vikor = VikorService(v=0.5)
 
     def execute(self, scenario_id, user_id):
+        """
+        Назначение:
+            Запуск расчета рейтинга по заданному сценарию.
+        Параметры:
+            scenario_id (int): Идентификатор сценария.
+            user_id (int): Идентификатор пользователя.
+        Возвращает:
+            Run: Объект выполненного запуска.
+        """
         scenario = Scenario.query.get_or_404(scenario_id)
-
+        method = getattr(scenario, 'method', 'topsis')
+        if method not in self.VALID_METHODS:
+            raise ValueError(f"Unknown method: '{method}'. Allowed: {self.VALID_METHODS}")
         links = ScenarioCriterion.query.filter_by(
-            scenario_id=scenario.id,
-            is_enabled=True
+            scenario_id=scenario.id, is_enabled=True
         ).order_by(ScenarioCriterion.order_no.asc()).all()
+        if not links:
+            raise ValueError("Не выбрано ни одного критерия. Добавьте минимум 2 критерия в настройках сценария.")
+        if len(links) < 2:
+            raise ValueError(f"Выбран только {len(links)} критерий. Для расчёта необходимо минимум 2 критерия.")
 
         selected_criteria = [Criterion.query.get(link.criterion_id) for link in links]
+        missing_criteria = [link.criterion_id for link, crit in zip(links, selected_criteria) if crit is None]
+        if missing_criteria:
+            raise ValueError(f"Criteria not found in DB: {missing_criteria}")
+
         selected_codes = [c.code for c in selected_criteria]
         kinds = [c.kind for c in selected_criteria]
 
-        method = getattr(scenario, 'method', 'topsis')
+        scenario.status = 'в обработке'
+        db.session.commit()
 
-        # =========================================================================
-        # 1. РАСЧЁТ СЫРЫХ КРИТЕРИЕВ
-        # =========================================================================
-        calculator = CriteriaCalculator()
-        calculator.load_data()
-        calculated_data = calculator.calculate_all()
+        try:
+            calculator = CriteriaCalculator()
+            calculator.load_data()
+            calculated_data = calculator.calculate_all()
 
-        # =========================================================================
-        # 2. ФОРМИРОВАНИЕ СЫРОЙ МАТРИЦЫ
-        # =========================================================================
-        matrix_raw = []
-        names = []
-        carriers_list = []
+            matrix_raw, carriers_list = [], []
+            for carrier in calculator.carriers:
+                if carrier.carrier_id not in calculated_data:
+                    continue
 
-        for carrier in calculator.carriers:
-            if carrier.carrier_id in calculated_data:
+                carrier_shipments = [
+                    s for s in calculator.shipments
+                    if s.carrier_id == carrier.carrier_id
+                ]
+                if len(carrier_shipments) == 0:
+                    continue
+
+                delivered = [s for s in carrier_shipments if s.status == 'Доставлено']
+                if len(delivered) == 0:
+                    continue
+
                 criteria_raw = calculated_data[carrier.carrier_id]['criteria_raw']
                 row_raw = [float(criteria_raw.get(code, 0.0) or 0.0) for code in selected_codes]
                 matrix_raw.append(row_raw)
-                names.append(carrier.name)
                 carriers_list.append(carrier)
 
-        if not matrix_raw:
-            raise ValueError('Нет данных для расчета')
+            if not matrix_raw:
+                raise ValueError('Нет перевозчиков с доставленными рейсами.')
 
-        matrix_raw = np.array(matrix_raw, dtype=float)
+            matrix_raw = np.array(matrix_raw, dtype=float)
 
-        print("\n" + "=" * 100)
-        print("СЫРАЯ МАТРИЦА КРИТЕРИЕВ")
-        print("=" * 100)
-        print(f"{'Перевозчик':<25}", end="")
-        for code in selected_codes:
-            print(f"{code[:12]:>12}", end="")
-        print()
-        print("-" * 100)
-        for i, name in enumerate(names):
-            print(f"{name:<25}", end="")
-            for j in range(len(selected_codes)):
-                print(f"{matrix_raw[i, j]:>12.2f}", end="")
-            print()
+            config = scenario.get_swara_config()
+            if not config:
+                raise ValueError('Настройки SWARA не найдены.')
+            if len(config.get('ranking', [])) < 2:
+                raise ValueError('Выберите минимум 2 критерия и настройте их важность в SWARA.')
 
-        # =========================================================================
-        # 3. ВЕСА МЕТОДОМ SWARA (без дополнительной нормализации)
-        # =========================================================================
-        config = scenario.get_swara_config()
-        if not config:
-            raise ValueError('Настройки SWARA не найдены')
+            swara_weights = SwaraService.compute(config['ranking'], config['s_values'])
+            missing_weights = set(selected_codes) - set(swara_weights.keys())
+            if missing_weights:
+                raise ValueError(f"SWARA config missing weights for criteria: {missing_weights}")
 
-        swara_weights = SwaraService.compute(config['ranking'], config['s_values'])
-        weights = [swara_weights.get(code, 0.0) for code in selected_codes]
+            weights = [swara_weights.get(code, 0.0) for code in selected_codes]
+            if sum(weights) < 1e-12:
+                raise ValueError("Sum of weights is zero.")
 
-        print("\n" + "=" * 100)
-        print("ВЕСА КРИТЕРИЕВ (SWARA)")
-        print("=" * 100)
-        for code, weight in zip(selected_codes, weights):
-            print(f"  {code:<25}: {weight:.4f}")
-
-        # =========================================================================
-        # 4. ВЫБОР МЕТОДА И РАСЧЁТ
-        # =========================================================================
-        if method == 'vikor':
-            scores, debug = self.vikor.compute(matrix_raw, kinds, weights)
-            method_name = 'VIKOR + SWARA'
-            # VIKOR: Q_raw меньше = лучше, сортируем по возрастанию scores (Q_raw)
-            ranking = sorted(range(len(scores)), key=lambda i: scores[i])
-        else:
-            scores, debug = self.topsis.compute(matrix_raw, kinds, weights)
-            method_name = 'TOPSIS + SWARA'
-            # TOPSIS: Score больше = лучше, сортируем по убыванию
-            ranking = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)
-
-        # =========================================================================
-        # 5. ВЫВОД РЕЗУЛЬТАТОВ
-        # =========================================================================
-        print("\n" + "=" * 100)
-        print(f"ИТОГОВЫЕ РЕЗУЛЬТАТЫ ({method_name})")
-        print("=" * 100)
-
-        if method == 'topsis':
-            print(f"{'Место':<6} {'Перевозчик':<25} {'Score':>10} {'d+':>10} {'d-':>10}")
-            print("-" * 60)
-            for rank, idx in enumerate(ranking, start=1):
-                d_pos = debug[idx]['distance_to_best']
-                d_neg = debug[idx]['distance_to_worst']
-                print(f"{rank:<6} {names[idx]:<25} {scores[idx]:>10.4f} {d_pos:>10.4f} {d_neg:>10.4f}")
-        else:
-            print(f"{'Место':<6} {'Перевозчик':<25} {'Q':>10} {'S':>10} {'R':>10}")
-            print("-" * 60)
-            for rank, idx in enumerate(ranking, start=1):
-                print(f"{rank:<6} {names[idx]:<25} {scores[idx]:>10.4f} "
-                      f"{debug['S_values'][idx]:>10.4f} {debug['R_values'][idx]:>10.4f}")
-
-        # =========================================================================
-        # 6. СОХРАНЕНИЕ
-        # =========================================================================
-        run = Run(
-            scenario_id=scenario.id,
-            initiated_by=user_id,
-            status='done',
-            started_at=datetime.utcnow(),
-            finished_at=datetime.utcnow(),
-            meta_json=json.dumps({
-                'criteria_codes': selected_codes,
-                'criteria_names': [c.name for c in selected_criteria],
-                'criteria_kinds': kinds,
-                'weights': weights,
-                'method': method_name,
-                'weight_mode': 'swara',
-                'swara_config': config
-            }, ensure_ascii=False)
-        )
-
-        db.session.add(run)
-        db.session.flush()
-
-        for rank, idx in enumerate(ranking, start=1):
-            carrier = carriers_list[idx]
-
-            if method == 'topsis':
-                details = {
-                    'criteria_values_raw': calculated_data[carrier.carrier_id]['criteria_raw'],
-                    'criteria_codes': selected_codes,
-                    'distance_to_best': debug[idx]['distance_to_best'],
-                    'distance_to_worst': debug[idx]['distance_to_worst']
-                }
+            if method == 'vikor':
+                scores, debug = self.vikor.compute(matrix_raw, kinds, weights)
+                method_name = 'VIKOR'
+                ranking = sorted(range(len(scores)), key=lambda i: scores[i])
             else:
-                details = {
-                    'criteria_values_raw': calculated_data[carrier.carrier_id]['criteria_raw'],
+                scores, debug = self.topsis.compute(matrix_raw, kinds, weights)
+                method_name = 'TOPSIS'
+                ranking = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)
+
+            run = Run(
+                scenario_id=scenario.id,
+                initiated_by=user_id,
+                status='done',
+                started_at=datetime.now(timezone.utc),
+                finished_at=datetime.now(timezone.utc),
+                meta_json=json.dumps({
                     'criteria_codes': selected_codes,
-                    'S_value': debug['S_values'][idx],
-                    'R_value': debug['R_values'][idx],
-                    'Q_value': scores[idx]
-                }
+                    'criteria_names': [c.name for c in selected_criteria],
+                    'criteria_kinds': kinds,
+                    'weights': weights,
+                    'method': method_name,
+                    'swara_config': config
+                }, ensure_ascii=False)
+            )
+            db.session.add(run)
+            db.session.flush()
 
-            db.session.add(RunResult(
-                run_id=run.id,
-                carrier_id=carrier.carrier_id,
-                company_name=names[idx],
-                rank=rank,
-                score=float(scores[idx]),
-                details_json=json.dumps(details, ensure_ascii=False)
-            ))
+            for rank, idx in enumerate(ranking, start=1):
+                carrier = carriers_list[idx]
+                if method == 'topsis':
+                    details = {
+                        'criteria_values_raw': calculated_data[carrier.carrier_id]['criteria_raw'],
+                        'criteria_values_norm': debug[idx]['norm_values'],
+                        'criteria_codes': selected_codes,
+                        'distance_to_best': debug[idx]['distance_to_best'],
+                        'distance_to_worst': debug[idx]['distance_to_worst']
+                    }
+                else:
+                    details = {
+                        'criteria_values_raw': calculated_data[carrier.carrier_id]['criteria_raw'],
+                        'criteria_values_norm': debug['X_norm'][idx],
+                        'criteria_codes': selected_codes,
+                        'S_value': debug['S_values'][idx],
+                        'R_value': debug['R_values'][idx],
+                        'Q_value': scores[idx]
+                    }
+                db.session.add(RunResult(
+                    run_id=run.id,
+                    carrier_id=carrier.carrier_id,
+                    rank=rank,
+                    score=scores[idx],
+                    details_json=json.dumps(details, ensure_ascii=False)
+                ))
 
-        scenario.status = 'расчёт выполнен'
-        db.session.commit()
+            scenario.status = 'расчёт выполнен'
+            db.session.commit()
+
+        except Exception:
+            scenario.status = 'ошибка'
+            db.session.commit()
+            raise
 
         return run
 
     def latest_results(self, scenario_id):
+        """
+        Назначение:
+            Получение последнего запуска и его результатов для сценария.
+        Параметры:
+            scenario_id (int): Идентификатор сценария.
+        Возвращает:
+            tuple: (Run, list[RunResult]).
+        """
         run = Run.query.filter_by(scenario_id=scenario_id).order_by(Run.id.desc()).first()
         if not run:
             return None, []
@@ -185,15 +200,23 @@ class RunService:
         return run, rows
 
     def get_run(self, run_id):
+        """
+        Назначение:
+            Находит запуск по ID.
+        Параметры:
+            run_id (int): ID запуска.
+        Возвращает:
+            Run: Объект запуска (метаданные, статус, даты).
+        """
         return Run.query.get_or_404(run_id)
 
     def get_run_results(self, run_id):
+        """
+        Назначение:
+            Находит отсортированный список мест перевозчиков для запуска.
+        Параметры:
+            run_id (int): ID запуска.
+        Возвращает:
+            list[RunResult]: Список результатов, отсортированный по занятому месту.
+        """
         return RunResult.query.filter_by(run_id=run_id).order_by(RunResult.rank.asc()).all()
-
-    def delete_run(self, run_id):
-        run = Run.query.get_or_404(run_id)
-        RunResult.query.filter_by(run_id=run_id).delete()
-        db.session.delete(run)
-        db.session.commit()
-        return True
-

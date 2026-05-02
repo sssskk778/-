@@ -1,12 +1,28 @@
 version: '3.9'
 services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1234
+      POSTGRES_DB: rating_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
   web:
-    build: .
+    image: "carrier-rating:${TAG}"
+    build:
+      context: .
+      dockerfile: Dockerfile
     ports:
       - "8000:8000"
     environment:
-      - SECRET_KEY=carrier-rating-secret
-      - DATABASE_URL=sqlite:////app/instance/app.db
+      DATABASE_URL: postgresql://postgres:1234@db:5432/rating_db
+      SECRET_KEY: carrier-rating-secret
     volumes:
-      - ./instance:/app/instance
       - ./uploads:/app/uploads
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:

@@ -11,13 +11,12 @@
   <div class="brand">Carrier Rating Platform</div>
   {% if current_user %}
   <nav class="topnav">
-    <a href="{{ url_for('web.index') }}">Сценарии</a>
     {% if current_user.role == 'admin' %}
-    <a href="{{ url_for('web.dataset_page') }}">Загрузка данных</a>
-    <a href="{{ url_for('web.carriers_page') }}">Перевозчики</a>
+    <a href="{{ url_for('web.index') }}">Сценарии</a>
+    <a href="{{ url_for('web.dataset_page') }}">Загрузка отчета</a>
     {% endif %}
     <a href="{{ url_for('auth.logout') }}">Выход</a>
-      <span class="role-pill">{{ current_user.role }}</span>
+    <span class="role-pill">{{ current_user.role }}</span>
   </nav>
   {% endif %}
 </header>
