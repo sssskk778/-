@@ -69,7 +69,8 @@ function getCheckedCodes() {
 
 async function loadCriteriaGroups() {
   const res = await fetch('/api/criteria');
-  const criteria = await res.json();
+  const json = await res.json();
+  const criteria = json.data;
 
   CRITERIA_GROUPS = {
     'Надёжность исполнения': {
@@ -117,14 +118,16 @@ async function loadScenario() {
   try {
     const sRes = await fetch(`/api/scenarios/${scenarioId}`);
     if (!sRes.ok) throw new Error('Ошибка загрузки сценария');
-    currentScenario = await sRes.json();
+    const sJson = await sRes.json();
+    currentScenario = sJson.data;
     document.getElementById('name').value = currentScenario.name;
     document.getElementById('description').value = currentScenario.description || '';
     document.getElementById('method').value = currentScenario.method || 'topsis';
 
     const swaraRes = await fetch(`/api/scenarios/${scenarioId}/weights/swara`);
     if (swaraRes.ok) {
-      const swaraData = await swaraRes.json();
+      const swaraJson = await swaraRes.json();
+      const swaraData = swaraJson.data;
       swaraRanking = swaraData.ranking || [];
       swaraSValues = {};
       if (swaraData.s_values && swaraData.ranking) {
@@ -150,7 +153,8 @@ async function loadCriteria() {
   try {
     const res = await fetch('/api/criteria');
     if (!res.ok) throw new Error('Ошибка загрузки критериев');
-    const criteriaList = await res.json();
+    const json = await res.json();
+    const criteriaList = json.data;
     const criteriaMap = new Map();
     criteriaList.forEach(c => criteriaMap.set(c.code, c));
     const selected = new Set((currentScenario.criterion_ids || []).map(Number));
@@ -343,8 +347,8 @@ async function updateWeightsPreview() {
     });
     if (!res.ok) return;
 
-    const data = await res.json();
-    const weights = data.weights;
+    const json = await res.json();
+    const weights = json.data.weights;
     let html = '<h4 style="margin-bottom: 12px; font-size: 14px;">Итоговые веса:</h4>';
 
     swaraRanking.forEach(code => {
@@ -407,12 +411,12 @@ async function saveScenario(showToast = true) {
       body: JSON.stringify(payload)
     });
     if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.error || 'Ошибка сохранения');
+      const json = await res.json();
+      throw new Error(json.error || 'Ошибка сохранения');
     }
 
-    const data = await res.json();
-    const savedId = isNew ? data.id : scenarioId;
+    const json = await res.json();
+    const savedId = isNew ? json.data.id : scenarioId;
 
     await fetch(`/api/scenarios/${savedId}/weights/swara`, {
       method: 'PUT',

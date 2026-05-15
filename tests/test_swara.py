@@ -1,6 +1,6 @@
 # tests/test_swara.py
 import pytest
-from app.services.swara import SwaraService
+from app.services.algorithms.swara import SwaraService
 
 """
 Тестирование модуля расчета весов критериев методом SWARA.

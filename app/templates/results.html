@@ -132,7 +132,8 @@ async function loadCarriers() {
   try {
     const res = await fetch('/api/carriers');
     if (!res.ok) throw new Error(`Ошибка ${res.status}`);
-    carriersData = await res.json();
+    const json = await res.json();
+    carriersData = json.data;
     populateFilters();
   } catch (err) {
     console.error('Ошибка загрузки перевозчиков:', err);
@@ -248,9 +249,10 @@ async function load() {
     await loadCarriers();
     const res = await fetch(`/api/scenarios/${scenarioId}/latest-results`);
     if (!res.ok) throw new Error('Ошибка загрузки');
-    const data = await res.json();
+    const json = await res.json();
+    const data = json.data;
     latestRunId = data.run ? data.run.id : null;
-    currentMethod = (data.meta && data.meta.method) || 'TOPSIS + SWARA';
+    currentMethod = (data.run && data.run.meta && data.run.meta.method) || 'TOPSIS + SWARA';
     allResults = data.results || [];
     enrichResults();
     currentPage = 1;
@@ -287,8 +289,8 @@ if (rerunBtn) {
     try {
       const res = await fetch(`/api/scenarios/${scenarioId}/run`, { method: 'POST' });
       if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || 'Ошибка');
+        const json = await res.json();
+        throw new Error(json.error || 'Ошибка');
       }
       showMessage('Расчёт завершён', 'success');
       await load();

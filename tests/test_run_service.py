@@ -5,11 +5,10 @@
 """
 import pytest
 from app import db
-from app.models import User, Scenario, ScenarioCriterion, Criterion, Run
-from app.services.run_service import RunService
-from app.models import User, Scenario, ScenarioCriterion, Criterion, Run, Carrier, Shipment
-from datetime import datetime, timedelta
-import random
+from app.services.core.run_service import RunService
+from app.models import User, Scenario, ScenarioCriterion, Criterion, Carrier, Shipment
+
+
 def test_create_scenario(app):
     """
     - Тестируется создание сценария

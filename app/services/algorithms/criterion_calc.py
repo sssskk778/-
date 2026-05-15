@@ -10,7 +10,12 @@
 """
 from datetime import datetime
 from app.models import Carrier, Shipment
-from app.services.catalog import ACCIDENT_SEVERITY_COEFFICIENTS
+
+ACCIDENT_SEVERITY_COEFFICIENTS = {
+    'Легкое':  1.0,
+    'Среднее': 1.5,
+    'Тяжелое': 2.0,
+}
 
 class CriteriaCalculator:
 

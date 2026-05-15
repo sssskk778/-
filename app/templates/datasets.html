@@ -75,7 +75,8 @@ async function loadData() {
   try {
     const res = await fetch('/api/datasets');
     if (!res.ok) throw new Error('Ошибка загрузки');
-    const datasets = await res.json();
+    const json = await res.json();
+    const datasets = json.data;
 
     const container = document.getElementById('datasetList');
     if (datasets.length === 0) {
@@ -112,8 +113,8 @@ async function deleteDataset(id, name) {
   try {
     const res = await fetch(`/api/datasets/${id}`, {method: 'DELETE'});
     if (!res.ok) {
-      const error = await res.json();
-      throw new Error(error.error || 'Ошибка удаления');
+      const json = await res.json();
+      throw new Error(json.error || 'Ошибка удаления');
     }
     showToast('Загрузка удалена', 'success');
     await loadData();
@@ -181,10 +182,11 @@ document.getElementById('uploadForm').addEventListener('submit', async (e) => {
     }
 
     const res = await fetch('/api/datasets/upload', {method: 'POST', body: fd});
-    const data = await res.json();
+    const json = await res.json();
 
-    if (!res.ok) throw new Error(data.error || 'Ошибка импорта');
+    if (!res.ok) throw new Error(json.error || 'Ошибка импорта');
 
+    const data = json.data;
     let msg = 'Данные успешно загружены';
     if (data.preprocess) {
       const p = data.preprocess;

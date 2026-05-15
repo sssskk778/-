@@ -146,3 +146,33 @@ class ScenarioService:
                 is_enabled=True,
                 order_no=idx
             ))
+
+    def list_criteria(self) -> list:
+        return Criterion.query.order_by(Criterion.order_no.asc()).all()
+
+    def set_swara_weights(self, scenario_id: int, ranking: list, s_values: list) -> dict:
+        from app.services.algorithms.swara import SwaraService
+        if len(s_values) != len(ranking) - 1:
+            raise ValueError(f'Ожидается {len(ranking) - 1} значений s_values')
+        if not SwaraService.validate_s_values(s_values):
+            raise ValueError('s_values должны быть >= 0')
+        scenario = Scenario.query.get_or_404(scenario_id)
+        scenario.set_swara_config(ranking, s_values)
+        db.session.commit()
+        return {
+            'id': scenario.id,
+            'swara_config': scenario.get_swara_config(),
+            'weights': SwaraService.compute(ranking, s_values),
+        }
+
+    def get_swara_weights(self, scenario_id: int) -> dict:
+        from app.services.algorithms.swara import SwaraService
+        scenario = Scenario.query.get_or_404(scenario_id)
+        config = scenario.get_swara_config()
+        if not config:
+            return {'ranking': [], 's_values': [], 'weights': {}}
+        return {
+            'ranking': config['ranking'],
+            's_values': config['s_values'],
+            'weights': SwaraService.compute(config['ranking'], config['s_values']),
+        }

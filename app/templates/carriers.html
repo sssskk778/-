@@ -78,7 +78,8 @@ const itemsPerPage = 15;
 async function loadCarriers() {
   try {
     const res = await fetch('/api/carriers');
-    allCarriers = await res.json();
+    const json = await res.json();
+    allCarriers = json.data;
 
     updateStats();
     populateFilters();

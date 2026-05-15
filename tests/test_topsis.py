@@ -1,7 +1,7 @@
 # tests/test_topsis.py
 import numpy as np
 import pytest
-from app.services.topsis import TopsisService
+from app.services.algorithms.topsis import TopsisService
 
 """
 Тестирование метода многокритериальной оценки TOPSIS.

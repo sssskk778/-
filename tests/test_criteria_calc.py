@@ -1,7 +1,7 @@
 # tests/test_criteria_calc.py
 import pytest
 from datetime import datetime, timedelta
-from app.services.criterion_calc import CriteriaCalculator
+from app.services.algorithms.criterion_calc import CriteriaCalculator
 
 """
 Тестирование калькулятора критериев.

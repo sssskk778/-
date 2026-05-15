@@ -5,7 +5,7 @@
 """
 import pandas as pd
 from datetime import datetime, timedelta
-from app.services.excel_preprocessor import ExcelPreprocessor
+from app.services.data.excel_preprocessor import ExcelPreprocessor
 
 
 def test_preprocessor_carriers_valid():

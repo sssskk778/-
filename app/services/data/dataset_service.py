@@ -13,8 +13,8 @@ from flask import current_app
 from werkzeug.utils import secure_filename
 from app import db
 from app.models import Dataset, Carrier, Shipment
-from app.services.excel_preprocessor import ExcelPreprocessor
-from app.services.excel_importer import ExcelImporter
+from app.services.data.excel_preprocessor import ExcelPreprocessor
+from app.services.data.excel_importer import ExcelImporter
 
 
 class DatasetService:
@@ -161,3 +161,16 @@ class DatasetService:
             if file_path.exists():
                 file_path.unlink()
             raise ValueError(f"Ошибка импорта: {str(e)}")
+
+    def format_preprocess_report(self, report: dict) -> dict:
+        stats = report['stats']
+        return {
+            'total_carriers': stats['total_carriers'],
+            'valid_carriers': stats['valid_carriers'],
+            'empty_carriers': stats.get('empty_carriers', 0),
+            'total_shipments': stats['total_shipments'],
+            'valid_shipments': stats['valid_shipments'],
+            'empty_shipments': stats.get('empty_shipments', 0),
+            'total_errors': report['total_errors'],
+            'errors': report['errors'][:20],
+        }

@@ -5,7 +5,7 @@
 """
 import pandas as pd
 import random
-from app.services.excel_importer import ExcelImporter
+from app.services.data.excel_importer import ExcelImporter
 
 
 def test_safe_int():

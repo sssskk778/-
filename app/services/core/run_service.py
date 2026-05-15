@@ -9,13 +9,15 @@
 """
 import json
 from datetime import datetime, timezone
+
 import numpy as np
 from app import db
-from app.models import Scenario, ScenarioCriterion, Run, RunResult, Criterion, Carrier
-from app.services.swara import SwaraService
-from app.services.criterion_calc import CriteriaCalculator
-from app.services.topsis import TopsisService
-from app.services.vikor import VikorService
+from app.models import Scenario, ScenarioCriterion, Run, RunResult, Criterion
+from app.services.algorithms.swara import SwaraService
+from app.services.algorithms.criterion_calc import CriteriaCalculator
+from app.services.algorithms.topsis import TopsisService
+from app.services.algorithms.vikor import VikorService
+
 
 class RunService:
     """
@@ -184,7 +186,31 @@ class RunService:
 
         return run
 
-    def latest_results(self, scenario_id):
+    def list_runs(self, scenario_id: int) -> list:
+        """
+        Назначение:
+            Список всех запусков для сценария.
+        Параметры:
+            scenario_id (int): ID сценария.
+        Возвращает:
+            list[Run]: Список запусков, отсортированный по убыванию ID.
+        """
+        return Run.query.filter_by(scenario_id=scenario_id).order_by(Run.id.desc()).all()
+
+    def get_run_detail(self, run_id: int):
+        """
+        Назначение:
+            Запуск и его результаты по ID.
+        Параметры:
+            run_id (int): ID запуска.
+        Возвращает:
+            tuple: (Run, list[RunResult]).
+        """
+        run = self.get_run(run_id)
+        results = self.get_run_results(run_id)
+        return run, results
+
+    def latest_results(self, scenario_id: int):
         """
         Назначение:
             Получение последнего запуска и его результатов для сценария.
@@ -199,7 +225,7 @@ class RunService:
         rows = RunResult.query.filter_by(run_id=run.id).order_by(RunResult.rank.asc()).all()
         return run, rows
 
-    def get_run(self, run_id):
+    def get_run(self, run_id: int) -> Run:
         """
         Назначение:
             Находит запуск по ID.
@@ -210,7 +236,7 @@ class RunService:
         """
         return Run.query.get_or_404(run_id)
 
-    def get_run_results(self, run_id):
+    def get_run_results(self, run_id: int) -> list:
         """
         Назначение:
             Находит отсортированный список мест перевозчиков для запуска.
@@ -220,3 +246,4 @@ class RunService:
             list[RunResult]: Список результатов, отсортированный по занятому месту.
         """
         return RunResult.query.filter_by(run_id=run_id).order_by(RunResult.rank.asc()).all()
+

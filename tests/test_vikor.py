@@ -1,7 +1,7 @@
 # tests/test_vikor.py
 import numpy as np
 import pytest
-from app.services.vikor import VikorService
+from app.services.algorithms.vikor import VikorService
 
 """
 Тестирование метода многокритериальной оценки VIKOR.
