@@ -28,5 +28,44 @@
   {% endwith %}
   {% block content %}{% endblock %}
 </main>
+
+<script>
+/**
+ * Глобальная утилита для fetch-запросов.
+ * Обрабатывает потерю сети и нечитаемые ответы сервера.
+ */
+async function apiFetch(url, options = {}) {
+  try {
+    const res = await fetch(url, options);
+    let json;
+    try {
+      json = await res.json();
+    } catch {
+      throw new Error('Сервер вернул неожиданный ответ. Попробуйте ещё раз.');
+    }
+    if (!res.ok) {
+      throw new Error(json.error || `Ошибка сервера (${res.status})`);
+    }
+    return json;
+  } catch (err) {
+    if (err instanceof TypeError && err.message === 'Failed to fetch') {
+      throw new Error('Нет соединения с сервером. Проверьте интернет и попробуйте снова.');
+    }
+    throw err;
+  }
+}
+
+/**
+ * Глобальный обработчик необработанных ошибок JS.
+ * Логирует в консоль с деталями.
+ */
+window.addEventListener('unhandledrejection', (event) => {
+  console.error('[Unhandled Promise]', event.reason);
+});
+
+window.addEventListener('error', (event) => {
+  console.error('[JS Error]', event.message, 'at', event.filename, ':', event.lineno);
+});
+</script>
 </body>
 </html>

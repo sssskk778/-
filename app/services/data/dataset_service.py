@@ -153,7 +153,8 @@ class DatasetService:
 
             return {
                 'dataset': dataset,
-                'preprocess_report': preprocess_report
+                'preprocess_report': preprocess_report,
+                'skipped_shipments': importer.stats['skipped_shipments'],
             }
 
         except Exception as e:

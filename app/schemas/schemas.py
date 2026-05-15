@@ -34,15 +34,8 @@ def validate_rating(value):
 
 
 class LoginSchema(Schema):
-    username = fields.String(
-        required=True,
-        validate=validate_username,
-        metadata={'description': 'Имя пользователя (латиница, цифры, _)'}
-    )
-    password = fields.String(
-        required=True,
-        metadata={'description': 'Пароль'}
-    )
+    username = fields.String(required=True)
+    password = fields.String(required=True)
 
 
 class RegisterSchema(Schema):
@@ -131,8 +124,7 @@ class ScenarioCreateSchema(Schema):
     criterion_ids = fields.List(
         fields.Integer(strict=True),
         required=True,
-        validate=validate.Length(min=2, error='Минимум 2 критерия'),
-        metadata={'description': 'Список ID критериев'}
+        validate=validate.Length(min=1, error='Минимум 1 критерий'),
     )
     swara_config = fields.Dict(
         load_default={},

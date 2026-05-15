@@ -191,6 +191,12 @@ document.getElementById('uploadForm').addEventListener('submit', async (e) => {
     if (data.preprocess) {
       const p = data.preprocess;
       msg += ` | Перевозчиков: ${p.valid_carriers}/${p.total_carriers}, Рейсов: ${p.valid_shipments}/${p.total_shipments}`;
+      if (p.duplicate_carriers > 0 || p.duplicate_shipments > 0) {
+        msg += ` | Дубликатов в файле: ${p.duplicate_carriers + p.duplicate_shipments}`;
+      }
+      if (data.skipped_shipments > 0) {
+        msg += ` | Уже в БД: ${data.skipped_shipments}`;
+      }
       if (p.total_errors > 0) {
         msg += ` | Ошибок: ${p.total_errors}`;
       }

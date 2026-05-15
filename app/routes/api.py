@@ -6,14 +6,17 @@
 Последнее изменение: ДД.ММ.ГГГГ
 Контакт: ekaterinaloseva91@gmail.com
 """
-from functools import wraps
 
 from flask import Blueprint, jsonify, request, make_response
 from marshmallow import ValidationError
 from app.utils.validators import validate_body, validate_query
-
+import logging
 from app.auth import login_required, admin_required, current_user
+from app.models import User
+from app import db
 from app.schemas.schemas import (
+    LoginSchema,
+    RegisterSchema,
     ShipmentFilterSchema,
     ScenarioCreateSchema,
     ScenarioUpdateSchema,
@@ -43,6 +46,12 @@ export_svc = ExportService()
 scenarios = ScenarioService()
 runs = RunService()
 
+logger = logging.getLogger(__name__)
+
+# =============================================================================
+# УТИЛИТЫ: единый формат ответов и валидация
+# =============================================================================
+
 def success(data=None, status=200, meta=None):
     """Успешный ответ в едином формате."""
     body = {'ok': True, 'data': data}
@@ -59,6 +68,45 @@ def error(message, status=400, details=None):
     return jsonify(body), status
 
 
+
+
+
+# =============================================================================
+# AUTH
+# =============================================================================
+
+@api_bp.post('/auth/login')
+@validate_body(LoginSchema)
+def login_post(data):
+    from flask import session
+    user = User.query.filter_by(username=data['username']).first()
+    if not user or not user.check_password(data['password']):
+        return error('Неверное имя пользователя или пароль', 401)
+    session['user_id'] = user.id
+    return success({'id': user.id, 'username': user.username, 'role': user.role})
+
+
+@api_bp.post('/auth/register')
+@validate_body(RegisterSchema)
+def register_post(data):
+    from flask import session
+    if User.query.filter_by(username=data['username']).first():
+        return error('Пользователь с таким логином уже существует', 400)
+    user = User(username=data['username'], full_name=data['full_name'], role='user')
+    user.set_password(data['password'])
+    db.session.add(user)
+    db.session.commit()
+    session['user_id'] = user.id
+    return success({'id': user.id, 'username': user.username, 'role': user.role}, 201)
+
+
+@api_bp.post('/auth/logout')
+def logout_post():
+    from flask import session
+    session.pop('user_id', None)
+    return success({'message': 'Выход выполнен'})
+
+
 @api_bp.get('/auth/me')
 @login_required
 def me():
@@ -69,6 +117,11 @@ def me():
         'full_name': u.full_name,
         'role': u.role,
     })
+
+
+# =============================================================================
+# DATASETS
+# =============================================================================
 
 @api_bp.get('/datasets')
 @login_required
@@ -114,9 +167,14 @@ def upload_dataset():
         }
         if result.get('preprocess_report'):
             data['preprocess'] = datasets.format_preprocess_report(result['preprocess_report'])
+        if result.get('skipped_shipments', 0) > 0:
+            data['skipped_shipments'] = result['skipped_shipments']
         return success(data, 201)
-    except Exception as e:
+    except ValueError as e:
         return error(str(e), 400)
+    except Exception:
+        logger.exception('Ошибка при загрузке датасета')
+        return error('Не удалось загрузить датасет. Проверьте файл и попробуйте снова.', 500)
 
 
 @api_bp.delete('/datasets/<int:did>')
@@ -125,9 +183,14 @@ def delete_dataset(did):
     try:
         datasets.delete_dataset(did)
         return success({'message': 'Датасет удален'})
-    except Exception as e:
-        return error(str(e), 400)
+    except Exception:
+        logger.exception('Ошибка при удалении датасета did=%s', did)
+        return error('Не удалось удалить датасет.', 500)
 
+
+# =============================================================================
+# CARRIERS
+# =============================================================================
 
 @api_bp.get('/carriers')
 @login_required
@@ -144,6 +207,11 @@ def carrier_detail(cid):
         'stats': carriers_svc.get_carrier_stats(cid),
     })
 
+
+# =============================================================================
+# SHIPMENTS
+# =============================================================================
+
 @api_bp.get('/shipments')
 @login_required
 @validate_query(ShipmentFilterSchema)
@@ -155,11 +223,20 @@ def shipments(filters):
     )
     return success([serialize_shipment(s) for s in rows])
 
+
+# =============================================================================
+# CRITERIA
+# =============================================================================
+
 @api_bp.get('/criteria')
 @login_required
 def criteria():
     return success([serialize_criterion(c) for c in scenarios.list_criteria()])
 
+
+# =============================================================================
+# SCENARIOS
+# =============================================================================
 
 @api_bp.get('/scenarios')
 @login_required
@@ -203,6 +280,10 @@ def scenario_delete(sid):
     return success({'message': 'deleted'})
 
 
+# =============================================================================
+# SWARA WEIGHTS
+# =============================================================================
+
 @api_bp.put('/scenarios/<int:sid>/weights/swara')
 @admin_required
 @validate_body(SwaraWeightsSchema)
@@ -231,6 +312,10 @@ def scenario_preview_swara_weights(sid, data):
         return error(str(e), 400)
 
 
+# =============================================================================
+# RUNS
+# =============================================================================
+
 @api_bp.post('/scenarios/<int:sid>/run')
 @admin_required
 def scenario_run(sid):
@@ -239,8 +324,9 @@ def scenario_run(sid):
         return success({'run_id': run.id, 'status': run.status}, 201)
     except ValueError as e:
         return error(str(e), 400)
-    except Exception as e:
-        return error(str(e), 500)
+    except Exception:
+        logger.exception('Ошибка при запуске расчёта sid=%s', sid)
+        return error('Внутренняя ошибка при выполнении расчёта.', 500)
 
 
 @api_bp.get('/scenarios/<int:sid>/runs')
@@ -269,6 +355,11 @@ def latest_results(sid):
         'run': serialize_run(run),
         'results': [serialize_run_result(r) for r in results],
     })
+
+
+# =============================================================================
+# EXPORT
+# =============================================================================
 
 @api_bp.get('/scenarios/<int:sid>/export')
 @login_required

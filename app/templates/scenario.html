@@ -388,7 +388,7 @@ function getPayload() {
 function validate(payload) {
   if (!payload.name) return 'Введите название';
   if (payload.criterion_ids.length < 2) return 'Выберите минимум 2 критерия';
-  if (payload.swara_config.ranking.length < 2) return 'Настройте важность критериев (минимум 2)';
+  if (payload.swara_config.ranking.length < 2) return 'Настройте важность критериев';
   return null;
 }
 

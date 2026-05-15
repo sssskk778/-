@@ -1,5 +1,46 @@
 from flask import jsonify
 
+
+# =============================================================================
+# КАСТОМНЫЕ ИСКЛЮЧЕНИЯ
+# =============================================================================
+
+class AppError(ValueError):
+    """Базовый класс для бизнес-ошибок приложения."""
+    status_code = 400
+
+    def __init__(self, message: str):
+        super().__init__(message)
+        self.message = message
+
+
+class NotFoundError(AppError):
+    """Объект не найден."""
+    status_code = 404
+
+    def __init__(self, what: str = 'Объект'):
+        super().__init__(f'{what} не найден')
+
+
+class ValidationError(AppError):
+    """Ошибка валидации бизнес-данных."""
+    status_code = 422
+
+
+class ConflictError(AppError):
+    """Конфликт данных (дубликат и т.п.)."""
+    status_code = 409
+
+
+class CalculationError(AppError):
+    """Ошибка при выполнении расчёта."""
+    status_code = 400
+
+
+# =============================================================================
+# ГЛОБАЛЬНЫЕ ОБРАБОТЧИКИ HTTP-ОШИБОК
+# =============================================================================
+
 def register_error_handlers(app):
 
     @app.errorhandler(404)

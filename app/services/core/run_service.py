@@ -54,29 +54,30 @@ class RunService:
             Run: Объект выполненного запуска.
         """
         scenario = Scenario.query.get_or_404(scenario_id)
-        method = getattr(scenario, 'method', 'topsis')
-        if method not in self.VALID_METHODS:
-            raise ValueError(f"Unknown method: '{method}'. Allowed: {self.VALID_METHODS}")
-        links = ScenarioCriterion.query.filter_by(
-            scenario_id=scenario.id, is_enabled=True
-        ).order_by(ScenarioCriterion.order_no.asc()).all()
-        if not links:
-            raise ValueError("Не выбрано ни одного критерия. Добавьте минимум 2 критерия в настройках сценария.")
-        if len(links) < 2:
-            raise ValueError(f"Выбран только {len(links)} критерий. Для расчёта необходимо минимум 2 критерия.")
-
-        selected_criteria = [Criterion.query.get(link.criterion_id) for link in links]
-        missing_criteria = [link.criterion_id for link, crit in zip(links, selected_criteria) if crit is None]
-        if missing_criteria:
-            raise ValueError(f"Criteria not found in DB: {missing_criteria}")
-
-        selected_codes = [c.code for c in selected_criteria]
-        kinds = [c.kind for c in selected_criteria]
 
         scenario.status = 'в обработке'
         db.session.commit()
 
         try:
+            method = getattr(scenario, 'method', 'topsis')
+            if method not in self.VALID_METHODS:
+                raise ValueError(f"Unknown method: '{method}'. Allowed: {self.VALID_METHODS}")
+            links = ScenarioCriterion.query.filter_by(
+                scenario_id=scenario.id, is_enabled=True
+            ).order_by(ScenarioCriterion.order_no.asc()).all()
+            if not links:
+                raise ValueError("Не выбрано ни одного критерия. Добавьте минимум 2 критерия в настройках сценария.")
+            if len(links) < 2:
+                raise ValueError(f"Выбран только {len(links)} критерий. Для расчёта необходимо минимум 2 критерия.")
+
+            selected_criteria = [Criterion.query.get(link.criterion_id) for link in links]
+            missing_criteria = [link.criterion_id for link, crit in zip(links, selected_criteria) if crit is None]
+            if missing_criteria:
+                raise ValueError(f"Criteria not found in DB: {missing_criteria}")
+
+            selected_codes = [c.code for c in selected_criteria]
+            kinds = [c.kind for c in selected_criteria]
+
             calculator = CriteriaCalculator()
             calculator.load_data()
             calculated_data = calculator.calculate_all()
@@ -246,4 +247,3 @@ class RunService:
             list[RunResult]: Список результатов, отсортированный по занятому месту.
         """
         return RunResult.query.filter_by(run_id=run_id).order_by(RunResult.rank.asc()).all()
-

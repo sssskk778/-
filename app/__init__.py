@@ -30,4 +30,7 @@ def create_app():
     def inject_user():
         return {'current_user': current_user()}
 
+    from app.utils.errors import register_error_handlers
+    register_error_handlers(app)
+
     return app

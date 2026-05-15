@@ -36,15 +36,16 @@ function showMessage(message, isError = false) {
 document.getElementById('loginForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const fd = new FormData(e.target);
-  const res = await fetch('{{ url_for("auth.login_post") }}', {
+  const res = await fetch('/api/auth/login', {
     method: 'POST',
-    body: fd
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(Object.fromEntries(fd))
   });
-  if (res.redirected) {
-    window.location.href = res.url;
+  const json = await res.json();
+  if (json.ok) {
+    window.location.href = '/';
   } else {
-    const text = await res.text();
-    showMessage(text || 'Неверное имя пользователя или пароль.', true);
+    showMessage(json.error || 'Неверное имя пользователя или пароль.', true);
   }
 });
 </script>

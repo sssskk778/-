@@ -24,11 +24,11 @@
             <div class="card-status">
               <span class="status {% if s.status == 'расчёт выполнен' %}done{% elif s.status == 'черновик' %}draft{% elif s.status == 'в обработке' %}processing{% endif %}">
                 {% if s.status == 'расчёт выполнен' %}
-                  ✓ Выполнен
+                  Выполнен
                 {% elif s.status == 'в обработке' %}
-                  ↻ В обработке
+                  В обработке
                 {% elif s.status == 'черновик' %}
-                  ○ Черновик
+                  Черновик
                 {% else %}
                   {{ s.status }}
                 {% endif %}
@@ -117,7 +117,7 @@ document.querySelectorAll('.run-scenario-btn').forEach(btn => {
     this.disabled = true;
 
     if (statusEl) {
-      statusEl.textContent = '↻ В обработке';
+      statusEl.textContent = 'В обработке';
       statusEl.classList.remove('draft', 'done');
     }
 
@@ -149,8 +149,8 @@ document.querySelectorAll('.run-scenario-btn').forEach(btn => {
       this.innerHTML = originalContent;
       this.disabled = false;
       if (statusEl) {
-        statusEl.textContent = '○ Черновик';
-        statusEl.classList.add('draft');
+        statusEl.textContent = 'Ошибка';
+        statusEl.className = 'scenario-status error';
       }
     }
   });
