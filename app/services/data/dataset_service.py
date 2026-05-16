@@ -82,6 +82,13 @@ class DatasetService:
         """
         ds = Dataset.query.get_or_404(dataset_id)
         result = {"id": ds.id, "name": ds.name, "file_name": ds.file_name}
+
+        upload_folder = current_app.config.get('UPLOAD_FOLDER')
+        if upload_folder and ds.file_name:
+            file_path = Path(upload_folder) / ds.file_name
+            if file_path.exists():
+                file_path.unlink()
+
         db.session.delete(ds)
         db.session.commit()
         return result
@@ -150,6 +157,9 @@ class DatasetService:
                     name=name,
                     description=description
                 )
+
+            if file_path.exists():
+                file_path.unlink()
 
             return {
                 'dataset': dataset,

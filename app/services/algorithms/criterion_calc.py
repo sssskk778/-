@@ -36,17 +36,24 @@ class CriteriaCalculator:
     def _decay_weight(self, date_value):
         """
         Назначение:
-            Вычисляет экспоненциальный вес рейса по формуле
-            0.5 ^ (возраст_дней / decay_halflife).
+            Вычисляет вес рейса по формуле линейного распада.
+            S = max(s - max(0, |age - offset|) / s, 0)
+            где s = scale / (1 - decay)
         Параметры:
             date_value (datetime): Дата погрузки рейса.
         Возвращает:
             float: Вес рейса от 0 до 1.
         """
+        scale = 730  # горизонт 2 года в днях
+        offset = 0  # льготный период без убывания
+        decay = 0.5  # вес на границе scale (0.5 = половина веса через 2 года)
+
         age_days = (self.today - date_value.date()).days
         if age_days < 0:
             age_days = 0
-        return 0.5 ** (age_days / self.decay_halflife)
+
+        s = scale / (1.0 - decay)  # s = 730 / 0.5 = 1460
+        return max(0.0, (s - max(0.0, age_days - offset)) / s)
 
     def load_data(self):
         """
