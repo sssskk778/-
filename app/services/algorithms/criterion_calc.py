@@ -12,8 +12,8 @@ from datetime import datetime
 from app.models import Carrier, Shipment
 
 ACCIDENT_SEVERITY_COEFFICIENTS = {
-    'Легкое':  1.0,
-    'Среднее': 1.5,
+    'Легкое':  0.5,
+    'Среднее': 1.0,
     'Тяжелое': 2.0,
 }
 
@@ -205,15 +205,17 @@ class CriteriaCalculator:
         Возвращает:
             float: Процент от 0 до 100.
         """
-        total = 0.0
-        accident = 0.0
+        accident_total = 0.0  # взвешенное число ДТП с учётом тяжести
+        fleet_total = 0.0  # взвешенное общее число рейсов
+
         for s in delivered:
             w = self._decay_weight(s.pickup_window_start)
-            total += w
+            fleet_total += w
             if s.carrier_fault and s.accident_severity and s.accident_severity != 'Нет':
                 severity = ACCIDENT_SEVERITY_COEFFICIENTS.get(s.accident_severity, 1.0)
-                accident += w * severity
-        return round(accident / total * 100, 2)
+                accident_total += w * severity
+
+        return round(accident_total / fleet_total * 100, 2)
 
     def _tracking(self, delivered):
         """
@@ -285,6 +287,7 @@ class CriteriaCalculator:
         for s in delivered:
             w = self._decay_weight(s.pickup_window_start)
             total += w
-            price_sum += float(s.price) * w
-            km_sum += float(s.distance_km) * w
-        return round(price_sum / km_sum, 2)
+            rpk = float(s.price) / float(s.distance_km)  # цена за км этого рейса
+            price_sum += rpk * w  # взвешиваем уже готовое значение
+
+        return round(price_sum / total, 2)

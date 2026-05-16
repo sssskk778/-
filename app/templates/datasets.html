@@ -186,8 +186,29 @@ document.getElementById('uploadForm').addEventListener('submit', async (e) => {
 
     if (!res.ok) throw new Error(json.error || 'Ошибка импорта');
 
-    const data = json.data;
+    // Опрашиваем статус задачи пока не завершится
+    showToast('Загрузка файла принята, обрабатывается...', 'success');
+
+    const taskId = json.data.task_id;
+    let taskData = null;
+    for (let i = 0; i < 60; i++) {
+      await new Promise(r => setTimeout(r, 1000));
+      const statusRes = await fetch(`/api/tasks/${taskId}`);
+      const statusJson = await statusRes.json();
+      const status = statusJson.data.status;
+      if (status === 'SUCCESS') {
+        taskData = statusJson.data.result;
+        break;
+      }
+      if (status === 'FAILURE') {
+        throw new Error(statusJson.data.error || 'Ошибка импорта');
+      }
+    }
+
+    if (!taskData) throw new Error('Импорт не завершился за 60 секунд');
+
     let msg = 'Данные успешно загружены';
+    const data = taskData;
     if (data.preprocess) {
       const p = data.preprocess;
       msg += ` | Перевозчиков: ${p.valid_carriers}/${p.total_carriers}, Рейсов: ${p.valid_shipments}/${p.total_shipments}`;

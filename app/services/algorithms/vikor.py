@@ -10,6 +10,7 @@
 import numpy as np
 from typing import List, Tuple, Dict, Any
 
+
 class VikorService:
     """
     Назначение:
@@ -18,7 +19,7 @@ class VikorService:
         v (float): Коэффициент компромисса (0 — минимум R, 1 — минимум S).
                    По умолчанию 0.5.
     Возвращает:
-        scores (list[float]): Оценки альтернатив (0-1, меньше = лучше).
+        scores (list[float]): Оценки альтернатив (0-1, больше = лучше).
         debug (dict): Детали расчета для сохранения в БД.
     """
 
@@ -53,31 +54,38 @@ class VikorService:
         weights_arr = np.array(weights, dtype=float)
         m, n = X.shape
 
-        X_norm = np.zeros_like(X)
+        # Шаг 1. Определение идеального f+ и анти-идеального f- по исходной матрице X
+        f_best = np.zeros(n)
+        f_worst = np.zeros(n)
         for j in range(n):
             col = X[:, j]
-            min_val = col.min()
-            max_val = col.max()
-            if max_val - min_val < 1e-12:
-                X_norm[:, j] = 0.5
-            elif kinds[j] == "benefit":
-                X_norm[:, j] = (col - min_val) / (max_val - min_val)
+            if kinds[j] == 'benefit':
+                f_best[j] = col.max()
+                f_worst[j] = col.min()
             else:
-                X_norm[:, j] = (max_val - col) / (max_val - min_val)
+                f_best[j] = col.min()
+                f_worst[j] = col.max()
 
-        f_best = X_norm.max(axis=0)
-        f_worst = X_norm.min(axis=0)
+        # Шаг 2. Линейная нормализация — нормализованное отклонение от идеала
+        # d_ij = (f_j+ - x_ij) / (f_j+ - f_j-)
+        D = np.zeros_like(X)
+        for j in range(n):
+            denom = f_best[j] - f_worst[j]
+            if abs(denom) < 1e-12:
+                D[:, j] = 0.0
+            else:
+                D[:, j] = (f_best[j] - X[:, j]) / denom
 
+        # Шаг 3. Суммарное взвешенное отклонение S и максимальное отклонение R
         S = np.zeros(m)
         R = np.zeros(m)
         for i in range(m):
             for j in range(n):
-                denom = f_best[j] - f_worst[j]
-                diff = 0.0 if denom < 1e-12 else (f_best[j] - X_norm[i, j]) / denom
-                weighted = weights_arr[j] * diff
+                weighted = weights_arr[j] * D[i, j]
                 S[i] += weighted
                 R[i] = max(R[i], weighted)
 
+        # Шаг 4. Компромиссный индекс Q
         S_min, S_max = S.min(), S.max()
         R_min, R_max = R.min(), R.max()
         Q = np.zeros(m)
@@ -86,14 +94,21 @@ class VikorService:
             r_part = 0.0 if abs(R_max - R_min) < 1e-12 else (R[i] - R_min) / (R_max - R_min)
             Q[i] = self.v * s_part + (1 - self.v) * r_part
 
+        # Шаг 5. Инверсия Q для унификации с TOPSIS (1 = лучший перевозчик)
         Q_min, Q_max = Q.min(), Q.max()
-        scores = np.zeros(m) if abs(Q_max - Q_min) < 1e-12 else (Q - Q_min) / (Q_max - Q_min)
+        if abs(Q_max - Q_min) < 1e-12:
+            scores = np.ones(m)
+        else:
+            scores = 1.0 - (Q - Q_min) / (Q_max - Q_min)
 
         debug = {
-            "X_norm": X_norm.tolist(),
+            "f_best": f_best.tolist(),
+            "f_worst": f_worst.tolist(),
+            "D_values": D.tolist(),
             "S_values": S.tolist(),
             "R_values": R.tolist(),
-            "Q_value": scores.tolist(),
+            "Q_values": Q.tolist(),
+            "scores": scores.tolist(),
         }
 
         return scores.tolist(), debug

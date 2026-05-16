@@ -6,11 +6,13 @@
 Последнее изменение: ДД.ММ.ГГГГ
 Контакт: ekaterinaloseva91@gmail.com
 """
+from functools import wraps
 
 from flask import Blueprint, jsonify, request, make_response
 from marshmallow import ValidationError
 from app.utils.validators import validate_body, validate_query
-import logging
+from app.utils.errors import AppError
+
 from app.auth import login_required, admin_required, current_user
 from app.models import User
 from app import db
@@ -38,6 +40,7 @@ from app.services.core.export_service import ExportService
 from app.services.core.scenario_service import ScenarioService
 from app.services.core.run_service import RunService
 from app.services.algorithms.swara import SwaraService
+from app.services.core.task_service import TaskService
 
 api_bp = Blueprint('api', __name__, url_prefix='/api')
 carriers_svc = CarrierService()
@@ -45,8 +48,8 @@ datasets = DatasetService()
 export_svc = ExportService()
 scenarios = ScenarioService()
 runs = RunService()
+task_svc = TaskService()
 
-logger = logging.getLogger(__name__)
 
 # =============================================================================
 # УТИЛИТЫ: единый формат ответов и валидация
@@ -151,31 +154,13 @@ def upload_dataset():
     except ValidationError as e:
         return error('Ошибка параметров', 422, e.messages)
 
-    try:
-        result = datasets.import_excel(
-            file_storage=file,
-            name=params.get('name') or file.filename,
-            description=params.get('description', ''),
-            skip_preprocess=params.get('skip_preprocess', False),
-        )
-        ds = result['dataset']
-        counts = carriers_svc.get_dataset_counts(ds.id)
-        data = {
-            **serialize_dataset(ds),
-            **counts,
-            'message': 'Датасет успешно загружен',
-        }
-        if result.get('preprocess_report'):
-            data['preprocess'] = datasets.format_preprocess_report(result['preprocess_report'])
-        if result.get('skipped_shipments', 0) > 0:
-            data['skipped_shipments'] = result['skipped_shipments']
-        return success(data, 201)
-    except ValueError as e:
-        return error(str(e), 400)
-    except Exception:
-        logger.exception('Ошибка при загрузке датасета')
-        return error('Не удалось загрузить датасет. Проверьте файл и попробуйте снова.', 500)
-
+    result = task_svc.start_import(
+        file_storage=file,
+        name=params.get('name') or file.filename,
+        description=params.get('description', ''),
+        skip_preprocess=params.get('skip_preprocess', False),
+    )
+    return success(result, 202)
 
 @api_bp.delete('/datasets/<int:did>')
 @login_required
@@ -319,14 +304,7 @@ def scenario_preview_swara_weights(sid, data):
 @api_bp.post('/scenarios/<int:sid>/run')
 @admin_required
 def scenario_run(sid):
-    try:
-        run = runs.execute(sid, current_user().id)
-        return success({'run_id': run.id, 'status': run.status}, 201)
-    except ValueError as e:
-        return error(str(e), 400)
-    except Exception:
-        logger.exception('Ошибка при запуске расчёта sid=%s', sid)
-        return error('Внутренняя ошибка при выполнении расчёта.', 500)
+    return success(task_svc.start_run(sid, current_user().id), 202)
 
 
 @api_bp.get('/scenarios/<int:sid>/runs')
@@ -374,3 +352,13 @@ def export_excel(sid):
     response.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     response.headers['Content-Disposition'] = f'attachment; filename=scenario_{sid}_results.xlsx'
     return response
+
+
+# =============================================================================
+# TASKS
+# =============================================================================
+
+@api_bp.get('/tasks/<task_id>')
+@login_required
+def task_status(task_id):
+    return success(task_svc.get_status(task_id))

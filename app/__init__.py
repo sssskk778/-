@@ -17,6 +17,20 @@ def create_app():
     migrate.init_app(app, _db)
     swagger.init_app(app)
 
+    # Настройка Celery
+    from app.extensions import celery
+    celery.conf.update(
+        broker_url=app.config['CELERY_BROKER_URL'],
+        result_backend=app.config['CELERY_RESULT_BACKEND'],
+    )
+
+    class ContextTask(celery.Task):
+        def __call__(self, *args, **kwargs):
+            with app.app_context():
+                return self.run(*args, **kwargs)
+
+    celery.Task = ContextTask
+
     from app.routes.auth import auth_bp
     from app.routes.web import web_bp
     from app.routes.api import api_bp
