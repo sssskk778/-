@@ -53,7 +53,7 @@
 
           <div class="card-actions">
             {% if current_user.role == 'admin' %}
-              <a href="{{ url_for('web.scenario_page', sid=s.id) }}" class="icon-link" title="Настроить критерии">
+              <a href="{{ url_for('web.scenario_page', sid=s.id) }}" class="icon-link" title="Настройка">
                 <span>⚙️</span>
               </a>
               <button class="icon-link run-scenario-btn" data-scenario-id="{{ s.id }}" title="Рассчитать рейтинг">

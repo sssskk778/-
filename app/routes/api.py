@@ -7,11 +7,13 @@
 Контакт: ekaterinaloseva91@gmail.com
 """
 from functools import wraps
+import logging
+
+logger = logging.getLogger(__name__)
 
 from flask import Blueprint, jsonify, request, make_response
 from marshmallow import ValidationError
 from app.utils.validators import validate_body, validate_query
-from app.utils.errors import AppError
 
 from app.auth import login_required, admin_required, current_user
 from app.models import User
@@ -71,9 +73,6 @@ def error(message, status=400, details=None):
     return jsonify(body), status
 
 
-
-
-
 # =============================================================================
 # AUTH
 # =============================================================================
@@ -81,6 +80,20 @@ def error(message, status=400, details=None):
 @api_bp.post('/auth/login')
 @validate_body(LoginSchema)
 def login_post(data):
+    """
+    Авторизация пользователя.
+    ---
+    tags: [Auth]
+    parameters:
+      - in: body
+        schema:
+          properties:
+            username: {type: string}
+            password: {type: string}
+    responses:
+      200: {description: Успешная авторизация}
+      401: {description: Неверные данные}
+    """
     from flask import session
     user = User.query.filter_by(username=data['username']).first()
     if not user or not user.check_password(data['password']):
@@ -92,6 +105,14 @@ def login_post(data):
 @api_bp.post('/auth/register')
 @validate_body(RegisterSchema)
 def register_post(data):
+    """
+    Регистрация пользователя.
+    ---
+    tags: [Auth]
+    responses:
+      201: {description: Пользователь создан}
+      400: {description: Логин уже занят}
+    """
     from flask import session
     if User.query.filter_by(username=data['username']).first():
         return error('Пользователь с таким логином уже существует', 400)
@@ -105,6 +126,13 @@ def register_post(data):
 
 @api_bp.post('/auth/logout')
 def logout_post():
+    """
+    Выход из системы.
+    ---
+    tags: [Auth]
+    responses:
+      200: {description: Выход выполнен}
+    """
     from flask import session
     session.pop('user_id', None)
     return success({'message': 'Выход выполнен'})
@@ -113,6 +141,14 @@ def logout_post():
 @api_bp.get('/auth/me')
 @login_required
 def me():
+    """
+    Информация о текущем пользователе.
+    ---
+    tags: [Auth]
+    responses:
+      200: {description: Данные пользователя}
+      401: {description: Не авторизован}
+    """
     u = current_user()
     return success({
         'id': u.id,
@@ -129,12 +165,30 @@ def me():
 @api_bp.get('/datasets')
 @login_required
 def dataset_list():
+    """
+    Список датасетов.
+    ---
+    tags: [Datasets]
+    responses:
+      200: {description: Список датасетов}
+    """
     return success([serialize_dataset(d) for d in datasets.list_datasets()])
 
 
 @api_bp.get('/datasets/<int:did>')
 @login_required
 def dataset_detail(did):
+    """
+    Детальная информация о датасете.
+    ---
+    tags: [Datasets]
+    parameters:
+      - in: path
+        name: did
+        type: integer
+    responses:
+      200: {description: Информация о датасете}
+    """
     ds = datasets.get_dataset(did)
     counts = carriers_svc.get_dataset_counts(did)
     return success({**serialize_dataset(ds), **counts})
@@ -143,6 +197,15 @@ def dataset_detail(did):
 @api_bp.post('/datasets/upload')
 @login_required
 def upload_dataset():
+    """
+    Загрузка Excel-файла с данными.
+    ---
+    tags: [Datasets]
+    consumes: [multipart/form-data]
+    responses:
+      202: {description: Задача импорта создана}
+      400: {description: Ошибка файла}
+    """
     if 'file' not in request.files:
         return error('Файл не передан', 400)
     file = request.files['file']
@@ -154,6 +217,11 @@ def upload_dataset():
     except ValidationError as e:
         return error('Ошибка параметров', 422, e.messages)
 
+    file_bytes = file.read()
+    if len(file_bytes) == 0:
+        return error('Файл не может быть пустым', 400)
+    file.seek(0)
+
     result = task_svc.start_import(
         file_storage=file,
         name=params.get('name') or file.filename,
@@ -162,13 +230,29 @@ def upload_dataset():
     )
     return success(result, 202)
 
+
 @api_bp.delete('/datasets/<int:did>')
 @login_required
 def delete_dataset(did):
+    """
+    Удаление датасета.
+    ---
+    tags: [Datasets]
+    parameters:
+      - in: path
+        name: did
+        type: integer
+    responses:
+      200: {description: Датасет удалён}
+      404: {description: Датасет не найден}
+    """
     try:
         datasets.delete_dataset(did)
         return success({'message': 'Датасет удален'})
-    except Exception:
+    except Exception as e:
+        from werkzeug.exceptions import NotFound
+        if isinstance(e, NotFound):
+            return error('Датасет не найден', 404)
         logger.exception('Ошибка при удалении датасета did=%s', did)
         return error('Не удалось удалить датасет.', 500)
 
@@ -180,12 +264,30 @@ def delete_dataset(did):
 @api_bp.get('/carriers')
 @login_required
 def carriers():
+    """
+    Список перевозчиков.
+    ---
+    tags: [Carriers]
+    responses:
+      200: {description: Список перевозчиков}
+    """
     return success([serialize_carrier(c) for c in carriers_svc.list_carriers()])
 
 
 @api_bp.get('/carriers/<int:cid>')
 @login_required
 def carrier_detail(cid):
+    """
+    Детальная информация о перевозчике.
+    ---
+    tags: [Carriers]
+    parameters:
+      - in: path
+        name: cid
+        type: integer
+    responses:
+      200: {description: Информация о перевозчике}
+    """
     carrier = carriers_svc.get_carrier(cid)
     return success({
         **serialize_carrier(carrier),
@@ -226,6 +328,13 @@ def criteria():
 @api_bp.get('/scenarios')
 @login_required
 def scenario_list():
+    """
+    Список сценариев.
+    ---
+    tags: [Scenarios]
+    responses:
+      200: {description: Список сценариев}
+    """
     return success([serialize_scenario(s) for s in scenarios.list_all()])
 
 
@@ -240,6 +349,14 @@ def scenario_get(sid):
 @admin_required
 @validate_body(ScenarioCreateSchema)
 def scenario_create(data):
+    """
+    Создание сценария.
+    ---
+    tags: [Scenarios]
+    responses:
+      201: {description: Сценарий создан}
+      422: {description: Ошибка валидации}
+    """
     try:
         s = scenarios.create(data, current_user().id)
         return success({'id': s.id, 'name': s.name}, 201)
@@ -251,6 +368,17 @@ def scenario_create(data):
 @admin_required
 @validate_body(ScenarioUpdateSchema)
 def scenario_update(sid, data):
+    """
+    Редактирование сценария.
+    ---
+    tags: [Scenarios]
+    parameters:
+      - in: path
+        name: sid
+        type: integer
+    responses:
+      200: {description: Сценарий обновлён}
+    """
     try:
         s = scenarios.update(sid, data)
         return success({'id': s.id, 'name': s.name})
@@ -261,6 +389,17 @@ def scenario_update(sid, data):
 @api_bp.delete('/scenarios/<int:sid>')
 @admin_required
 def scenario_delete(sid):
+    """
+    Удаление сценария.
+    ---
+    tags: [Scenarios]
+    parameters:
+      - in: path
+        name: sid
+        type: integer
+    responses:
+      200: {description: Сценарий удалён}
+    """
     scenarios.delete(sid)
     return success({'message': 'deleted'})
 
@@ -304,18 +443,51 @@ def scenario_preview_swara_weights(sid, data):
 @api_bp.post('/scenarios/<int:sid>/run')
 @admin_required
 def scenario_run(sid):
+    """
+    Запуск расчёта рейтинга.
+    ---
+    tags: [Runs]
+    parameters:
+      - in: path
+        name: sid
+        type: integer
+    responses:
+      202: {description: Задача расчёта создана}
+    """
     return success(task_svc.start_run(sid, current_user().id), 202)
 
 
 @api_bp.get('/scenarios/<int:sid>/runs')
 @login_required
 def scenario_runs(sid):
+    """
+    История запусков сценария.
+    ---
+    tags: [Runs]
+    parameters:
+      - in: path
+        name: sid
+        type: integer
+    responses:
+      200: {description: Список запусков}
+    """
     return success([serialize_run(r) for r in runs.list_runs(sid)])
 
 
 @api_bp.get('/runs/<int:rid>')
 @login_required
 def run_detail(rid):
+    """
+    Детализация запуска.
+    ---
+    tags: [Runs]
+    parameters:
+      - in: path
+        name: rid
+        type: integer
+    responses:
+      200: {description: Детализация запуска}
+    """
     run, results = runs.get_run_detail(rid)
     return success({
         'run': serialize_run(run),
@@ -326,6 +498,13 @@ def run_detail(rid):
 @api_bp.get('/scenarios/<int:sid>/latest-results')
 @login_required
 def latest_results(sid):
+    """
+    Последние результаты расчёта.
+    ---
+    tags: [Runs]
+    responses:
+      200: {description: Результаты расчёта}
+    """
     run, results = runs.latest_results(sid)
     if not run:
         return success({'run': None, 'results': [], 'meta': None})
@@ -342,6 +521,14 @@ def latest_results(sid):
 @api_bp.get('/scenarios/<int:sid>/export')
 @login_required
 def export_excel(sid):
+    """
+    Экспорт результатов в Excel.
+    ---
+    tags: [Export]
+    responses:
+      200: {description: Excel-файл}
+      404: {description: Нет результатов}
+    """
     run, results = runs.latest_results(sid)
     if not run:
         return error('Нет результатов', 404)
@@ -361,4 +548,15 @@ def export_excel(sid):
 @api_bp.get('/tasks/<task_id>')
 @login_required
 def task_status(task_id):
+    """
+    Статус фоновой задачи.
+    ---
+    tags: [Tasks]
+    parameters:
+      - in: path
+        name: task_id
+        type: string
+    responses:
+      200: {description: Статус задачи}
+    """
     return success(task_svc.get_status(task_id))

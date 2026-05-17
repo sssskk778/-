@@ -1,25 +1,33 @@
-import os
+"""
+Общие фикстуры для интеграционного тестирования.
+Файл: tests/conftest.py
+"""
+import sys
+from pathlib import Path
+sys.path.append(str(Path(__file__).parent.parent))
+import json
 import pytest
+import os
 from app import create_app, db as _db
-
 
 @pytest.fixture
 def app():
-    # Переопределяем URI ДО создания приложения
     os.environ['DATABASE_URL'] = 'sqlite:///:memory:'
+    application = create_app()
+    application.config['TESTING'] = True
+    application.config['CELERY_TASK_ALWAYS_EAGER'] = True
+    application.config['CELERY_TASK_EAGER_PROPAGATES'] = False
+    application.config['UPLOAD_FOLDER'] = '/tmp/test_uploads'
 
-    app = create_app()
-    app.config['TESTING'] = True
-
-    with app.app_context():
+    with application.app_context():
         _db.create_all()
 
         from app.models import User, Criterion
-
         admin = User(username='admin', full_name='Admin', role='admin')
         admin.set_password('admin123')
-        _db.session.add(admin)
-        _db.session.commit()
+        user = User(username='user1', full_name='User', role='user')
+        user.set_password('user123')
+        _db.session.add_all([admin, user])
 
         criteria = [
             ('on_time_rate', 'Своевременность доставки', 'benefit'),
@@ -37,7 +45,7 @@ def app():
             _db.session.add(Criterion(code=code, name=name, kind=kind, order_no=order))
         _db.session.commit()
 
-        yield app
+        yield application
         _db.session.remove()
         _db.drop_all()
 
@@ -45,3 +53,40 @@ def app():
 @pytest.fixture
 def client(app):
     return app.test_client()
+
+
+@pytest.fixture
+def admin_client(client):
+    """Авторизованный клиент с правами администратора."""
+    client.post('/api/auth/login',
+                data=json.dumps({'username': 'admin', 'password': 'admin123'}),
+                content_type='application/json')
+    return client
+
+
+@pytest.fixture
+def user_client(client):
+    """Авторизованный клиент с правами пользователя."""
+    client.post('/api/auth/login',
+                data=json.dumps({'username': 'user1', 'password': 'user123'}),
+                content_type='application/json')
+    return client
+
+
+@pytest.fixture
+def scenario_id(admin_client):
+    """Создаёт сценарий и возвращает его ID."""
+    with admin_client.application.app_context():
+        from app.models import Criterion
+        criterion_ids = [c.id for c in Criterion.query.all()[:2]]
+
+    resp = admin_client.post('/api/scenarios',
+                             data=json.dumps({
+                                 'name': 'Тестовый сценарий',
+                                 'description': 'Описание',
+                                 'method': 'topsis',
+                                 'criterion_ids': criterion_ids,
+                                 'swara_config': {}
+                             }),
+                             content_type='application/json')
+    return resp.get_json()['data']['id']
