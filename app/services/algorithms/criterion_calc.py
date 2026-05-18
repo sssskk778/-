@@ -37,22 +37,20 @@ class CriteriaCalculator:
         """
         Назначение:
             Вычисляет вес рейса по формуле линейного распада.
-            S = max(s - max(0, |age - offset|) / s, 0)
-            где s = scale / (1 - decay)
         Параметры:
             date_value (datetime): Дата погрузки рейса.
         Возвращает:
             float: Вес рейса от 0 до 1.
         """
-        scale = 730  # горизонт 2 года в днях
-        offset = 0  # льготный период без убывания
-        decay = 0.5  # вес на границе scale (0.5 = половина веса через 2 года)
+        scale = 730
+        offset = 0
+        decay = 0.5
 
         age_days = (self.today - date_value.date()).days
         if age_days < 0:
             age_days = 0
 
-        s = scale / (1.0 - decay)  # s = 730 / 0.5 = 1460
+        s = scale / (1.0 - decay)
         return max(0.0, (s - max(0.0, age_days - offset)) / s)
 
     def load_data(self):
@@ -205,8 +203,8 @@ class CriteriaCalculator:
         Возвращает:
             float: Процент от 0 до 100.
         """
-        accident_total = 0.0  # взвешенное число ДТП с учётом тяжести
-        fleet_total = 0.0  # взвешенное общее число рейсов
+        accident_total = 0.0
+        fleet_total = 0.0
 
         for s in delivered:
             w = self._decay_weight(s.pickup_window_start)
@@ -287,7 +285,7 @@ class CriteriaCalculator:
         for s in delivered:
             w = self._decay_weight(s.pickup_window_start)
             total += w
-            rpk = float(s.price) / float(s.distance_km)  # цена за км этого рейса
-            price_sum += rpk * w  # взвешиваем уже готовое значение
+            rpk = float(s.price) / float(s.distance_km)
+            price_sum += rpk * w
 
         return round(price_sum / total, 2)

@@ -18,7 +18,6 @@ from marshmallow import (
 
 
 def validate_username(value):
-    """Только буквы, цифры и подчеркивание"""
     if not re.match(r'^[a-zA-Z0-9_]+$', value):
         raise ValidationError('Только латиница, цифры и подчеркивание')
 

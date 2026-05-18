@@ -126,7 +126,8 @@ class RunService:
             if method == 'vikor':
                 scores, debug = self.vikor.compute(matrix_raw, kinds, weights)
                 method_name = 'VIKOR'
-                ranking = sorted(range(len(scores)), key=lambda i: scores[i])
+                ranking = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)
+
             else:
                 scores, debug = self.topsis.compute(matrix_raw, kinds, weights)
                 method_name = 'TOPSIS'

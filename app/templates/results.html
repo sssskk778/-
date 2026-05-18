@@ -93,7 +93,6 @@ function getScoreLevel(score) {
 }
 
 function getLevelScore(result) {
-  if (currentMethod.includes('VIKOR')) return 1 - result.score;
   return result.score;
 }
 
@@ -184,7 +183,7 @@ function getFiltered() {
   const minScore = parseFloat(document.getElementById('minScoreInput').value);
   if (!isNaN(minScore)) {
     filtered = filtered.filter(r => {
-      const displayScore = currentMethod.includes('VIKOR') ? 1 - r.score : r.score;
+      const displayScore = r.score.toFixed(4);
       return displayScore >= minScore;
     });
   }
@@ -203,7 +202,7 @@ function renderTable() {
     tbody.innerHTML = pageResults.map(r => {
       const levelScore = getLevelScore(r);
       const level = getScoreLevel(levelScore);
-      const displayScore = currentMethod.includes('VIKOR') ? (1 - r.score).toFixed(4) : r.score.toFixed(4);
+      const displayScore = r.score.toFixed(4);
       return `<tr>
         <td>${r.rank}</td>
         <td><strong>${escapeHtml(r.company_name)}</strong></td>

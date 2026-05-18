@@ -105,10 +105,17 @@ class VikorService:
             "f_best": f_best.tolist(),
             "f_worst": f_worst.tolist(),
             "D_values": D.tolist(),
+            "X_norm": D.tolist(),
             "S_values": S.tolist(),
             "R_values": R.tolist(),
             "Q_values": Q.tolist(),
             "scores": scores.tolist(),
         }
 
+        print("f_best:", f_best.tolist())
+        print("f_worst:", f_worst.tolist())
+        print("D:", D.tolist())
+        print("S:", S.tolist())
+        print("Q:", Q.tolist())
+        print("scores:", scores.tolist())
         return scores.tolist(), debug

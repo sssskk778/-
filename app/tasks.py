@@ -1,6 +1,5 @@
 """
 Фоновые задачи Celery.
-Файл: app/tasks.py
 """
 import logging
 from pathlib import Path
